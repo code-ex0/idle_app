@@ -37,7 +37,8 @@ class GameState extends ChangeNotifier {
     for (var entry in config.cost.entries) {
       final resourceId = entry.key;
       final cost = entry.value;
-      if (resources[resourceId]!.amount < cost) {
+      final resource = resources[resourceId];
+      if (resource == null || resource.amount < cost) {
         return;
       }
     }
