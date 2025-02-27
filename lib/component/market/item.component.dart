@@ -9,7 +9,7 @@ class MarketItem extends StatelessWidget {
   final Resource resource;
 
   String get priceText {
-    final sellPrice = (resource.value / 2).round();
+    final sellPrice = (resource.value).round();
     return 'Prix de vente: $sellPrice';
   }
 
@@ -53,14 +53,37 @@ class MarketItem extends StatelessWidget {
             alignment: MainAxisAlignment.end,
             spacing: 8,
             children: <Widget>[
-              TextButton(
-                onPressed: () {
-                  context.read<GameState>().sellResource(
-                    resource.id,
-                    BigInt.one,
-                  );
-                },
-                child: const Text('Vendre'),
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  TextButton(
+                    onPressed: () {
+                      context.read<GameState>().sellResource(
+                        resource.id,
+                        BigInt.one,
+                      );
+                    },
+                    child: const Text('Vendre'),
+                  ),
+                  TextButton(
+                    onPressed: () {
+                      context.read<GameState>().sellResource(
+                        resource.id,
+                        BigInt.from(10),
+                      );
+                    },
+                    child: const Text('Vendre 10'),
+                  ),
+                  TextButton(
+                    onPressed: () {
+                      context.read<GameState>().sellResource(
+                        resource.id,
+                        resource.amount,
+                      );
+                    },
+                    child: const Text('Vendre all'),
+                  ),
+                ],
               ),
             ],
           ),

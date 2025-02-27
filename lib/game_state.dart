@@ -9,10 +9,7 @@ import 'package:test_1/interfaces/building_group.interface.dart'; // Le fichier 
 class GameState extends ChangeNotifier {
   final Map<String, Resource> resources;
   final Map<String, Building> buildingConfigs;
-
-  // Au lieu d'une liste d'instances, on stocke un groupe par type de bâtiment.
   final Map<String, BuildingGroup> buildingGroups = {};
-
   Timer? _timer;
 
   GameState({required this.resources, required this.buildingConfigs}) {
@@ -145,9 +142,10 @@ class GameState extends ChangeNotifier {
     if (resource == null) return;
     if (resource.amount < quantity) return;
     resource.amount -= quantity;
-    final goldResource = resources['gold'];
-    if (goldResource != null) {
-      goldResource.amount += BigInt.from(resource.value) * quantity;
+    final dollarResource = resources['dollar'];
+    if (dollarResource != null) {
+      print('Selling $quantity $resourceId for ${resource.value} each');
+      dollarResource.amount += BigInt.from(resource.value) * quantity;
     }
     notifyListeners();
   }
@@ -186,6 +184,10 @@ class GameState extends ChangeNotifier {
 
     return GameState(resources: resources, buildingConfigs: buildingConfigs);
   }
+
+  // get resources // filter remove dollar id
+  List<Resource> get getResourcesList =>
+      resources.values.where((res) => res.id != 'dollar').toList();
 
   @override
   void dispose() {

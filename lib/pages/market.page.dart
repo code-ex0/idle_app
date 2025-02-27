@@ -13,7 +13,7 @@ class MarketPage extends StatelessWidget {
       body: Consumer<GameState>(
         builder: (context, gameState, child) {
           // Convertir la map en liste
-          final resourcesList = gameState.resources.values.toList();
+          final resourcesList = gameState.getResourcesList;
           return ListView.builder(
             itemCount: resourcesList.length,
             itemBuilder: (context, index) {

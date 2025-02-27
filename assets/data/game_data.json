@@ -1,11 +1,20 @@
 {
   "resources": [
     {
+      "id": "dollar",
+      "name": "Dollars",
+      "initialAmount": 0,
+      "unlock": true,
+      "value": 1,
+      "isCurrency": true
+    },
+    {
       "id": "wood",
       "name": "Wood",
       "initialAmount": 1000,
       "unlock": true,
-      "value": 1
+      "value": 1,
+      "isCurrency": false
     },
     {
       "id": "stone",
@@ -15,7 +24,8 @@
       "unlockCost": {
         "wood": 50
       },
-      "value": 2
+      "value": 2,
+      "isCurrency": false
     },
     {
       "id": "iron",
@@ -26,14 +36,20 @@
         "wood": 100,
         "stone": 50
       },
-      "value": 3
+      "value": 3,
+      "isCurrency": false
     },
     {
       "id": "gold",
       "name": "Or",
       "initialAmount": 0,
       "unlock": true,
-      "value": 0
+      "value": 0,
+      "unlockCost": {
+        "wood": 100,
+        "stone": 50
+      },
+      "isCurrency": false
     }
   ],
   "buildings": [

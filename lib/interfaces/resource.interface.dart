@@ -4,6 +4,7 @@ class Resource {
   final int initialAmount;
   final bool unlock;
   final int value;
+  final bool isCurrency;
   BigInt amount;
 
   Resource({
@@ -12,6 +13,7 @@ class Resource {
     required this.initialAmount,
     required this.unlock,
     required this.value,
+    this.isCurrency = false,
     BigInt? amount,
   }) : amount = amount ?? BigInt.from(initialAmount);
 
@@ -22,6 +24,7 @@ class Resource {
       initialAmount: json['initialAmount'] as int,
       unlock: json['unlock'] as bool,
       value: json['value'] as int,
+      isCurrency: json['isCurrency'] as bool,
       amount: BigInt.from(json['initialAmount']),
     );
   }
@@ -31,6 +34,6 @@ class Resource {
     'name': name,
     'unlock': unlock,
     'value': value,
-    'amount': amount.toString(), // Convertir en chaîne pour le JSON
+    'amount': amount.toString(),
   };
 }

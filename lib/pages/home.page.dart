@@ -38,10 +38,10 @@ class _HomeScreenState extends State<HomeScreen> {
         actions: [
           Consumer<GameState>(
             builder: (context, gameState, child) {
-              final gold = gameState.resources['gold']?.amount ?? 0;
+              final gold = gameState.resources['dollar']?.amount ?? 0;
               return Padding(
                 padding: const EdgeInsets.all(8.0),
-                child: Center(child: Text('Or: $gold')),
+                child: Center(child: Text('$gold \$')),
               );
             },
           ),
