@@ -4,7 +4,7 @@ import 'package:test_1/game_state.dart';
 import 'package:test_1/interfaces/resource.interface.dart';
 
 class MarketItem extends StatelessWidget {
-  const MarketItem({Key? key, required this.resource}) : super(key: key);
+  const MarketItem({super.key, required this.resource});
 
   final Resource resource;
 
