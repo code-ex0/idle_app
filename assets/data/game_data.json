@@ -1,0 +1,111 @@
+{
+  "resources": [
+    {
+      "id": "wood",
+      "name": "Wood",
+      "initialAmount": 100,
+      "unlock": true,
+      "value": 1
+    },
+    {
+      "id": "stone",
+      "name": "Stone",
+      "initialAmount": 1,
+      "unlock": false,
+      "unlockCost": {
+        "wood": 50
+      },
+      "value": 2
+    },
+    {
+      "id": "iron",
+      "name": "Iron",
+      "initialAmount": 0,
+      "unlock": false,
+      "unlockCost": {
+        "wood": 100,
+        "stone": 50
+      },
+      "value": 3
+    },
+    {
+      "id": "gold",
+      "name": "Or",
+      "initialAmount": 0,
+      "unlock": true,
+      "value": 0
+    }
+  ],
+  "buildings": [
+    {
+      "id": "sawmill",
+      "name": "Sawmill",
+      "cost": {
+        "wood": 50
+      },
+      "production": {
+        "wood": 1
+      },
+      "durability": 0,
+      "type": "sawmill",
+      "infiniteDurability": true
+    },
+    {
+      "id": "stone pile",
+      "name": "Stone Pile",
+      "cost": {
+        "wood": 50,
+        "stone": 1
+      },
+      "production": {
+        "stone": 1
+      },
+      "durability": 100,
+      "type": "quarry",
+      "infiniteDurability": false
+    },
+    {
+      "id": "quarry",
+      "name": "Quarry",
+      "cost": {
+        "wood": 100,
+        "stone": 25
+      },
+      "production": {
+        "stone": 5
+      },
+      "durability": 0,
+      "type": "quarry",
+      "infiniteDurability": true
+    }
+  ],
+  "upgrades": [
+    {
+      "id": "clickUpgrade",
+      "name": "Click Upgrade",
+      "level": 1,
+      "baseCost": {
+        "wood": 100,
+        "stone": 50
+      },
+      "effect": {
+        "value": 1
+      },
+      "infiniteUpgrade": true
+    }
+  ],
+  "crafts": [
+    {
+      "id": "craftTable",
+      "name": "Craft Table",
+      "cost": {
+        "wood": 20,
+        "stone": 10
+      },
+      "output": {
+        "item": "Table",
+        "effect": "UnlockCrafting"
+      }
+    }
+  ]
+}
