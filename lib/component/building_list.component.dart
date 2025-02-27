@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:test_1/component/building.component.dart';
 import 'package:test_1/interfaces/building.enum.dart';
 import 'package:test_1/interfaces/building.interface.dart';
-import 'package:test_1/interfaces/building_group.interface.dart';
 
 class BuildingListComponent extends StatelessWidget {
   const BuildingListComponent({
