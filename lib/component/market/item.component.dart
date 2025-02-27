@@ -29,12 +29,8 @@ class MarketItem extends StatelessWidget {
             leading: Container(
               width: 50,
               height: 50,
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(4),
-                color: Colors.grey[300],
-              ),
               child: Image.asset(
-                'assets/icon/${resource.id}.png',
+                'assets/icon/resources/${resource.id}.png',
                 fit: BoxFit.cover,
                 errorBuilder: (context, error, stackTrace) {
                   return const Center(child: Icon(Icons.image, size: 30));

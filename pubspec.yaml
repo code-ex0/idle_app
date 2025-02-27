@@ -91,5 +91,6 @@ flutter:
   # import image in folder assets/img
   assets:
     - assets/img/
-    - assets/icon/
+    - assets/icon/resources/
+    - assets/icon/buildings/
     - assets/data/game_data.json

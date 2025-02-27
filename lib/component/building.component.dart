@@ -9,56 +9,64 @@ class BuildingComponent extends StatelessWidget {
 
   final Building building;
 
-  String get costText {
-    return building.cost.entries.map((e) => '${e.key}: ${e.value}').join(', ');
+  String get costText =>
+      building.cost.entries.map((e) => '${e.key}: ${e.value}').join(', ');
+
+  bool _canAfford(BuildContext context) {
+    final gameState = Provider.of<GameState>(context, listen: false);
+    return building.cost.entries.every((entry) {
+      final resource = gameState.resources[entry.key];
+      return resource != null && resource.amount >= entry.value;
+    });
   }
 
-  bool canAfford(BuildContext context) {
+  String _missingResourcesText(BuildContext context) {
     final gameState = Provider.of<GameState>(context, listen: false);
-    for (var entry in building.cost.entries) {
-      final resourceId = entry.key;
-      final cost = entry.value;
-      final current = gameState.resources[resourceId]?.amount ?? BigInt.zero;
-      if (current < cost) return false;
-    }
-    return true;
-  }
-
-  String missingResourcesText(BuildContext context) {
-    final gameState = Provider.of<GameState>(context, listen: false);
-    List<String> missing = [];
-    for (var entry in building.cost.entries) {
-      final resourceId = entry.key;
-      final cost = entry.value;
-      final current = gameState.resources[resourceId]?.amount ?? BigInt.zero;
-      if (current < cost) {
-        missing.add('$resourceId: ${(cost - current).toString()}');
-      }
-    }
-    return missing.join(', ');
+    return building.cost.entries
+        .where((entry) {
+          final resource = gameState.resources[entry.key];
+          return resource == null || resource.amount < entry.value;
+        })
+        .map((entry) {
+          final resource = gameState.resources[entry.key];
+          final diff =
+              (resource == null) ? entry.value : entry.value - resource.amount;
+          return '${entry.key}: ${diff.toString()}';
+        })
+        .join(', ');
   }
 
   @override
   Widget build(BuildContext context) {
-    final affordable = canAfford(context);
-    final missingText = missingResourcesText(context);
+    final gameState = context.watch<GameState>();
+    final affordable = _canAfford(context);
+    final missingText = _missingResourcesText(context);
     final maxBuy = GameState.formatResourceAmount(
-      context.read<GameState>().calculateMaxBuy(building.id),
+      gameState.calculateMaxBuy(building.id),
     );
-    final currentBuilding =
-        context.read<GameState>().buildingGroups[building.id];
-    final quantity = GameState.formatResourceAmount(currentBuilding!.count);
+    final group = gameState.buildingGroups[building.id];
+    final quantity =
+        group != null ? GameState.formatResourceAmount(group.count) : '0';
+
+    String durabilityText = '';
+    double durabilityProgress = 1.0;
+    if (!building.infiniteDurability &&
+        group != null &&
+        group.count > BigInt.zero) {
+      durabilityText =
+          'Durabilité: ${group.lowestDurability} / ${building.durability}';
+      durabilityProgress = group.lowestDurability / building.durability;
+    }
 
     return Card(
       elevation: 3,
       margin: const EdgeInsets.all(8),
       child: Padding(
         padding: const EdgeInsets.all(8.0),
-        // Utilisation d'un Row pour disposer l'image à gauche et le contenu à droite.
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Image dans un carré de 80x80.
+            // Image dans un carré fixe
             Container(
               width: 80,
               height: 80,
@@ -67,16 +75,16 @@ class BuildingComponent extends StatelessWidget {
               child: Image.asset(
                 'assets/icon/${building.id}.png',
                 fit: BoxFit.cover,
-                errorBuilder: (context, error, stackTrace) {
-                  return const Center(child: Icon(Icons.image, size: 40));
-                },
+                errorBuilder:
+                    (context, error, stackTrace) =>
+                        const Center(child: Icon(Icons.image, size: 40)),
               ),
             ),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Ligne avec l'icône, le nom et la quantité.
+                  // Ligne avec icône, nom et quantité
                   Row(
                     children: [
                       const Icon(Icons.home),
@@ -94,28 +102,25 @@ class BuildingComponent extends StatelessWidget {
                     ],
                   ),
                   const SizedBox(height: 4),
-                  // Affichage du coût.
+                  // Affichage du coût
                   Text('Prix: $costText'),
-                  // Affichage des barres de durabilité si le bâtiment n'a pas une durabilité infinie.
+                  const SizedBox(height: 4),
+                  // Affichage de la durabilité si applicable
                   if (!building.infiniteDurability &&
-                      currentBuilding.count > BigInt.zero)
-                    Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 4.0),
-                      child: Column(
-                        children: [
-                          Text(
-                            'Durabilité: ${currentBuilding.lowestDurability} / ${building.durability}',
-                            style: const TextStyle(fontSize: 12),
-                          ),
-                          LinearProgressIndicator(
-                            value:
-                                currentBuilding.lowestDurability /
-                                building.durability,
-                          ),
-                        ],
-                      ),
+                      group != null &&
+                      group.count > BigInt.zero)
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          durabilityText,
+                          style: const TextStyle(fontSize: 12),
+                        ),
+                        LinearProgressIndicator(value: durabilityProgress),
+                      ],
                     ),
-                  // Ligne avec le message "Manque" et les boutons alignés.
+                  const SizedBox(height: 4),
+                  // Ligne avec message "Manque" et boutons alignés
                   Row(
                     children: [
                       Expanded(
@@ -143,7 +148,7 @@ class BuildingComponent extends StatelessWidget {
                                     .read<GameState>()
                                     .buyBuildingMax(building.id)
                                 : null,
-                        child: Text('Acheter Max (${maxBuy.toString()})'),
+                        child: Text('Acheter Max ($maxBuy)'),
                       ),
                     ],
                   ),
