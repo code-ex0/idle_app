@@ -92,5 +92,4 @@ flutter:
   assets:
     - assets/img/
     - assets/icon/resources/
-    - assets/icon/buildings/
     - assets/data/game_data.json
