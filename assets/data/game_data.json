@@ -3,14 +3,14 @@
     {
       "id": "wood",
       "name": "Wood",
-      "initialAmount": 100,
+      "initialAmount": 1000,
       "unlock": true,
       "value": 1
     },
     {
       "id": "stone",
       "name": "Stone",
-      "initialAmount": 1,
+      "initialAmount": 1000,
       "unlock": false,
       "unlockCost": {
         "wood": 50

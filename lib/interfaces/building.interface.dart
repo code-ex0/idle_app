@@ -3,12 +3,12 @@ import 'package:test_1/interfaces/building.enum.dart';
 class Building {
   final String id;
   final String name;
-  final Map<String, int> cost;
-  final Map<String, int> production;
+  final Map<String, BigInt> cost;
+  final Map<String, BigInt> production;
   final int durability;
   final BuildingType type;
   final bool infiniteDurability;
-  int amount;
+  BigInt amount;
   int currentDurability;
 
   Building({
@@ -20,16 +20,20 @@ class Building {
     required this.type,
     required this.infiniteDurability,
 
-    this.amount = 0,
+    BigInt? amount,
     this.currentDurability = 0,
-  });
+  }) : amount = amount ?? BigInt.from(0);
 
   factory Building.fromJson(Map<String, dynamic> json) {
     return Building(
       id: json['id'] as String,
       name: json['name'] as String,
-      cost: Map<String, int>.from(json['cost']),
-      production: Map<String, int>.from(json['production']),
+      cost: (json['cost'] as Map<String, dynamic>).map(
+        (key, value) => MapEntry(key, BigInt.from(value)),
+      ),
+      production: (json['production'] as Map<String, dynamic>).map(
+        (key, value) => MapEntry(key, BigInt.from(value)),
+      ),
       durability: json['durability'] as int,
       type: buildingTypeFromJson(json['type']),
       infiniteDurability: json['infiniteDurability'] as bool,
@@ -43,7 +47,7 @@ class Building {
     'production': production,
     'durability': durability,
     'type': type,
-    'amount': amount,
+    'amount': amount.toString(),
     'currentDurability': currentDurability,
     'infiniteDurability': infiniteDurability,
   };

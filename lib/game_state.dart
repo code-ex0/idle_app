@@ -4,134 +4,117 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:test_1/interfaces/building.interface.dart';
 import 'package:test_1/interfaces/resource.interface.dart';
+import 'package:test_1/interfaces/building_group.interface.dart'; // Le fichier où se trouve la classe BuildingGroup
 
 class GameState extends ChangeNotifier {
   final Map<String, Resource> resources;
   final Map<String, Building> buildingConfigs;
-  final List<Building> buildingInstances = [];
+
+  // Au lieu d'une liste d'instances, on stocke un groupe par type de bâtiment.
+  final Map<String, BuildingGroup> buildingGroups = {};
 
   Timer? _timer;
 
   GameState({required this.resources, required this.buildingConfigs}) {
+    // Initialiser les quantités des ressources.
     for (var res in resources.values) {
-      res.amount = res.initialAmount;
+      res.amount = BigInt.from(res.initialAmount);
     }
+    // Créer un groupe pour chaque configuration de bâtiment.
+    for (var config in buildingConfigs.values) {
+      buildingGroups[config.id] = BuildingGroup(config: config);
+    }
+    // Démarrer le tick du jeu toutes les secondes.
     _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
       tick();
     });
   }
 
+  bool _canAfford(Map<String, BigInt> cost) {
+    for (var entry in cost.entries) {
+      final resourceId = entry.key;
+      final required = entry.value;
+      final resource = resources[resourceId];
+      if (resource == null || resource.amount < required) {
+        return false;
+      }
+    }
+    return true;
+  }
+
+  void _deductCost(Map<String, BigInt> cost, BigInt multiplier) {
+    for (var entry in cost.entries) {
+      final resourceId = entry.key;
+      final costPerUnit = entry.value;
+      resources[resourceId]!.amount -= costPerUnit * multiplier;
+    }
+  }
+
+  /// Simule un clic qui produit une ressource (si débloquée).
   void clickResource(String resourceId) {
     final resource = resources[resourceId];
     if (resource == null) return;
     if (resource.unlock) {
-      resource.amount = resource.amount + resource.value;
+      resource.amount += BigInt.from(resource.value);
       notifyListeners();
     }
   }
 
+  /// Achète un bâtiment individuellement.
   void buyBuilding(String buildingId) {
     final config = buildingConfigs[buildingId];
     if (config == null) return;
-
-    for (var entry in config.cost.entries) {
-      final resourceId = entry.key;
-      final cost = entry.value;
-      final resource = resources[resourceId];
-      if (resource == null || resource.amount < cost) {
-        return;
-      }
-    }
-
-    for (var entry in config.cost.entries) {
-      final resourceId = entry.key;
-      final cost = entry.value;
-      resources[resourceId]!.amount -= cost;
-    }
-
-    final newBuilding = Building(
-      id: config.id,
-      name: config.name,
-      cost: config.cost,
-      production: config.production,
-      durability: config.durability,
-      type: config.type,
-      infiniteDurability: config.infiniteDurability,
-      amount: 1,
-      currentDurability: config.durability,
-    );
-
-    buildingInstances.add(newBuilding);
+    if (!_canAfford(config.cost)) return;
+    _deductCost(config.cost, BigInt.one);
+    // Ajoute une unité dans le BuildingGroup correspondant.
+    buildingGroups[buildingId]?.addUnit();
     notifyListeners();
   }
 
-  int calculatMaxBuy(String buildingId) {
-    final building = buildingConfigs[buildingId];
-    if (building == null) return 0;
-
-    int maxPossible = 999999999;
-    for (var entry in building.cost.entries) {
+  BigInt calculateMaxBuy(String buildingId) {
+    final config = buildingConfigs[buildingId];
+    if (config == null) return BigInt.zero;
+    BigInt maxPossible = BigInt.from(1) << 32;
+    for (var entry in config.cost.entries) {
       final resourceId = entry.key;
       final cost = entry.value;
-      final current = resources[resourceId]?.amount ?? 0;
+      final current = resources[resourceId]?.amount ?? BigInt.zero;
       final possibleForThisResource = current ~/ cost;
       if (possibleForThisResource < maxPossible) {
         maxPossible = possibleForThisResource;
       }
     }
-
     return maxPossible;
   }
 
+  /// Achète le maximum possible de bâtiments pour un type donné.
   void buyBuildingMax(String buildingId) {
-    final building = buildingConfigs[buildingId];
-    final maxPossible = calculatMaxBuy(buildingId);
+    final config = buildingConfigs[buildingId];
+    if (config == null) return;
+    final maxPossible = calculateMaxBuy(buildingId);
+    if (maxPossible <= BigInt.zero) return;
 
-    if (maxPossible <= 0 || building == null) return;
-
-    for (var entry in building.cost.entries) {
-      final resourceId = entry.key;
-      final cost = entry.value;
-      resources[resourceId]!.amount -= (cost * maxPossible);
+    _deductCost(config.cost, maxPossible);
+    for (int i = 0; i < maxPossible.toInt(); i++) {
+      buildingGroups[buildingId]?.addUnit();
     }
-
-    for (int i = 0; i < maxPossible; i++) {
-      final newBuilding = Building(
-        id: building.id,
-        name: building.name,
-        cost: building.cost,
-        production: building.production,
-        durability: building.durability,
-        type: building.type,
-        infiniteDurability: building.infiniteDurability,
-        amount: 1,
-        currentDurability: building.durability,
-      );
-      buildingInstances.add(newBuilding);
-    }
-
     notifyListeners();
   }
 
+  /// Tick de jeu : production et dégradation.
   void tick() {
     const int degradationPerTick = 1;
 
-    for (int i = buildingInstances.length - 1; i >= 0; i--) {
-      final building = buildingInstances[i];
-
-      building.production.forEach((resourceId, production) {
-        resources[resourceId]?.amount += production;
+    buildingGroups.forEach((id, group) {
+      // Production : pour chaque ressource produite par la config, ajoute production * count.
+      group.config.production.forEach((resourceId, production) {
+        resources[resourceId]?.amount += production * group.count;
       });
-
-      if (!building.infiniteDurability) {
-        building.currentDurability -= degradationPerTick;
-        if (building.currentDurability <= 0) {
-          buildingInstances.removeAt(i);
-          continue;
-        }
+      // Appliquer la dégradation si la durabilité n'est pas infinie.
+      if (!group.config.infiniteDurability) {
+        group.degrade(degradationPerTick);
       }
-    }
-
+    });
     notifyListeners();
   }
 
@@ -149,26 +132,38 @@ class GameState extends ChangeNotifier {
     }
   }
 
-  int reateProduction(String resourceId) {
-    int production = 0;
-    for (var building in buildingInstances) {
-      production += building.production[resourceId] ?? 0;
-    }
+  BigInt rateProduction(String resourceId) {
+    BigInt production = BigInt.zero;
+    buildingGroups.forEach((id, group) {
+      production += group.totalProduction(resourceId);
+    });
     return production;
   }
 
-  void sellResource(String resourceId, int quantity) {
+  void sellResource(String resourceId, BigInt quantity) {
     final resource = resources[resourceId];
     if (resource == null) return;
     if (resource.amount < quantity) return;
-
     resource.amount -= quantity;
     final goldResource = resources['gold'];
     if (goldResource != null) {
-      goldResource.amount += resource.value * quantity;
+      goldResource.amount += BigInt.from(resource.value) * quantity;
     }
-
     notifyListeners();
+  }
+
+  static String formatResourceAmount(BigInt amount) {
+    if (amount < BigInt.from(1000)) {
+      return amount.toString();
+    }
+    final List<String> suffixes = ['A', 'B', 'C', 'D', 'E', 'F'];
+    double value = amount.toDouble();
+    int suffixIndex = 0;
+    while (value >= 1000 && suffixIndex < suffixes.length) {
+      value /= 1000;
+      suffixIndex++;
+    }
+    return '${value.toStringAsFixed(2)} ${suffixes[suffixIndex - 1]}';
   }
 
   static Future<GameState> loadGameState() async {

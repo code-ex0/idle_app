@@ -4,7 +4,7 @@ class Resource {
   final int initialAmount;
   final bool unlock;
   final int value;
-  int amount;
+  BigInt amount;
 
   Resource({
     required this.id,
@@ -12,8 +12,8 @@ class Resource {
     required this.initialAmount,
     required this.unlock,
     required this.value,
-    this.amount = 0,
-  });
+    BigInt? amount,
+  }) : amount = amount ?? BigInt.from(initialAmount);
 
   factory Resource.fromJson(Map<String, dynamic> json) {
     return Resource(
@@ -22,7 +22,7 @@ class Resource {
       initialAmount: json['initialAmount'] as int,
       unlock: json['unlock'] as bool,
       value: json['value'] as int,
-      amount: json['initialAmount'] as int,
+      amount: BigInt.from(json['initialAmount']),
     );
   }
 
@@ -31,6 +31,6 @@ class Resource {
     'name': name,
     'unlock': unlock,
     'value': value,
-    'amount': amount,
+    'amount': amount.toString(), // Convertir en chaîne pour le JSON
   };
 }

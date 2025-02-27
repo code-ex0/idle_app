@@ -1,10 +1,3 @@
-// This is a basic Flutter widget test.
-//
-// To perform an interaction with a widget in your test, use the WidgetTester
-// utility in the flutter_test package. For example, you can send tap and scroll
-// gestures. You can also use WidgetTester to find child widgets in the widget
-// tree, read text, and verify that the values of widget properties are correct.
-
 import 'package:flutter_test/flutter_test.dart';
 import 'package:test_1/game_state.dart';
 import 'package:test_1/interfaces/resource.interface.dart';
@@ -12,11 +5,11 @@ import 'package:test_1/interfaces/building.interface.dart';
 import 'package:test_1/interfaces/building.enum.dart';
 
 void main() {
-  group('GameState Tests', () {
+  group('GameState Tests with BuildingGroup', () {
     late GameState gameState;
 
     setUp(() {
-      // Create dummy resources.
+      // Création de ressources factices.
       final resources = {
         'wood': Resource(
           id: 'wood',
@@ -28,7 +21,7 @@ void main() {
         'stone': Resource(
           id: 'stone',
           name: 'Stone',
-          initialAmount: 10, // ou une valeur suffisante
+          initialAmount: 10,
           unlock: true,
           value: 2,
         ),
@@ -41,30 +34,30 @@ void main() {
         ),
       };
 
-      // Create dummy building configurations.
+      // Création de configurations de bâtiments factices.
       final buildingConfigs = {
-        // Sawmill with infinite durability
+        // Sawmill avec durabilité infinie.
         'sawmill': Building(
           id: 'sawmill',
           name: 'Sawmill',
-          cost: {'wood': 50},
-          production: {'wood': 1},
-          durability: 0, // infinite durability
+          cost: {'wood': BigInt.from(50)},
+          production: {'wood': BigInt.from(1)},
+          durability: 0, // Infinie
           type: BuildingType.sawmill,
           infiniteDurability: true,
-          amount: 0,
+          amount: BigInt.zero,
           currentDurability: 0,
         ),
-        // Stone Pile with finite durability (for tick production testing)
+        // Stone Pile avec durabilité finie.
         'stonePile': Building(
           id: 'stonePile',
           name: 'Stone Pile',
-          cost: {'wood': 50, 'stone': 1},
-          production: {'wood': 2},
+          cost: {'wood': BigInt.from(50), 'stone': BigInt.from(1)},
+          production: {'wood': BigInt.from(2)},
           durability: 100,
           type: BuildingType.quarry,
           infiniteDurability: false,
-          amount: 0,
+          amount: BigInt.zero,
           currentDurability: 0,
         ),
       };
@@ -78,51 +71,54 @@ void main() {
     test('clickResource increments resource amount', () {
       final initialWood = gameState.resources['wood']!.amount;
       gameState.clickResource('wood');
-      expect(gameState.resources['wood']!.amount, equals(initialWood + 1));
+      expect(
+        gameState.resources['wood']!.amount,
+        equals(initialWood + BigInt.one),
+      );
     });
 
     test(
-      'buyBuilding reduces resource amount and creates a building instance',
+      'buyBuilding reduces resource amount and creates a building group entry',
       () {
         final initialWood = gameState.resources['wood']!.amount;
-        // Sawmill costs 50 wood.
+        // Sawmill coûte 50 wood.
         gameState.buyBuilding('sawmill');
-        expect(gameState.resources['wood']!.amount, equals(initialWood - 50));
-        expect(gameState.buildingInstances.length, equals(1));
-        final purchased = gameState.buildingInstances.first;
-        expect(purchased.id, equals('sawmill'));
-        // For infinite durability building, currentDurability should equal durability (which is 0 here)
-        expect(purchased.currentDurability, equals(0));
+        expect(
+          gameState.resources['wood']!.amount,
+          equals(initialWood - BigInt.from(50)),
+        );
+        expect(gameState.buildingGroups.containsKey('sawmill'), isTrue);
+        final group = gameState.buildingGroups['sawmill']!;
+        expect(group.count, equals(BigInt.one));
+        // Pour un bâtiment à durabilité infinie, aggregatedDurability n'est pas utilisé (ou reste à 0).
+        if (!group.config.infiniteDurability) {
+          expect(group.listDurabilitys, equals(group.config.durability));
+        }
       },
     );
 
     test(
       'tick produces resources and degrades durability for finite buildings',
       () {
-        // Create a new Stone Pile instance by buying it.
-        // First, ensure we have enough wood and stone.
-        gameState.resources['wood']!.amount = 200;
-        // We'll assume stone is not required to buy here for test simplicity.
+        // Assurer d'avoir assez de wood et stone.
+        gameState.resources['wood']!.amount = BigInt.from(200);
+        gameState.resources['stone']!.amount = BigInt.from(10);
+        // Acheter une Stone Pile.
         gameState.buyBuilding('stonePile');
-        // Our Stone Pile instance should now be in buildingInstances.
-        expect(gameState.buildingInstances.length, equals(1));
-        final stonePile = gameState.buildingInstances.first;
-        // When a finite building is bought, currentDurability is set to its durability.
-        expect(
-          stonePile.currentDurability,
-          equals(stonePile.durability.toDouble()),
-        );
+        expect(gameState.buildingGroups.containsKey('stonePile'), isTrue);
+        final group = gameState.buildingGroups['stonePile']!;
+        // Lors de l'achat, aggregatedDurability doit être égal à la durabilité de base.
+        expect(group.listDurabilitys, [equals(group.config.durability)]);
 
         final initialWood = gameState.resources['wood']!.amount;
-        // Call tick: For a Stone Pile, degradationPerTick is 1 per building.
+        // Appel de tick : une Stone Pile produit 2 wood par tick.
         gameState.tick();
-        // Production: Stone Pile produces 2 wood per tick.
-        expect(gameState.resources['wood']!.amount, equals(initialWood + 2));
-        // Durability should be reduced by 1.
         expect(
-          stonePile.currentDurability,
-          equals(stonePile.durability.toDouble() - 1),
+          gameState.resources['wood']!.amount,
+          equals(initialWood + BigInt.from(2)),
         );
+        // La dégradation devrait réduire aggregatedDurability de 1 * count (ici, count == 1).
+        expect(group.listDurabilitys, [equals(group.config.durability - 1)]);
       },
     );
   });

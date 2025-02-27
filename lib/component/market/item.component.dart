@@ -4,7 +4,7 @@ import 'package:test_1/game_state.dart';
 import 'package:test_1/interfaces/resource.interface.dart';
 
 class MarketItem extends StatelessWidget {
-  const MarketItem({super.key, required this.resource});
+  const MarketItem({Key? key, required this.resource}) : super(key: key);
 
   final Resource resource;
 
@@ -15,16 +15,24 @@ class MarketItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final gameState = context.watch<GameState>();
+    final stockText = GameState.formatResourceAmount(resource.amount);
+    final productionRate = GameState.formatResourceAmount(
+      gameState.rateProduction(resource.id),
+    );
+
     return Card(
       margin: const EdgeInsets.symmetric(vertical: 6, horizontal: 8),
       child: Column(
         children: <Widget>[
           ListTile(
-            // Display an image for the resource in a fixed square.
             leading: Container(
               width: 50,
               height: 50,
-              decoration: BoxDecoration(borderRadius: BorderRadius.circular(4)),
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(4),
+                color: Colors.grey[300],
+              ),
               child: Image.asset(
                 'assets/icon/${resource.id}.png',
                 fit: BoxFit.cover,
@@ -36,16 +44,12 @@ class MarketItem extends StatelessWidget {
             title: Text(resource.name),
             subtitle: Text(priceText),
             trailing: Column(
-              // mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.end,
               children: <Widget>[
-                // Display the quantity of the resource.
-                Text('Stock: ${resource.amount}'),
-                // const SizedBox(width: 8),
-                // Display the value of the resource.
-                Text(
-                  '${context.read<GameState>().reateProduction(resource.id)} / s',
-                ),
+                Text('Stock: $stockText'),
+                const SizedBox(height: 4),
+                Text('Prod: ${productionRate.toString()} / s'),
               ],
             ),
           ),
@@ -55,8 +59,10 @@ class MarketItem extends StatelessWidget {
             children: <Widget>[
               TextButton(
                 onPressed: () {
-                  // Implement your sell logic here.
-                  context.read<GameState>().sellResource(resource.id, 1);
+                  context.read<GameState>().sellResource(
+                    resource.id,
+                    BigInt.one,
+                  );
                 },
                 child: const Text('Vendre'),
               ),

@@ -15,7 +15,6 @@ class MinePage extends StatelessWidget {
         builder: (context, gameState, child) {
           return BuildingListComponent(
             buildings: gameState.buildingConfigs,
-            buildingInstances: gameState.buildingInstances,
             type: BuildingType.quarry,
           );
         },
