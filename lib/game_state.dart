@@ -144,7 +144,6 @@ class GameState extends ChangeNotifier {
     resource.amount -= quantity;
     final dollarResource = resources['dollar'];
     if (dollarResource != null) {
-      print('Selling $quantity $resourceId for ${resource.value} each');
       dollarResource.amount += BigInt.from(resource.value) * quantity;
     }
     notifyListeners();

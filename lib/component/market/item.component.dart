@@ -26,7 +26,7 @@ class MarketItem extends StatelessWidget {
       child: Column(
         children: <Widget>[
           ListTile(
-            leading: Container(
+            leading: SizedBox(
               width: 50,
               height: 50,
               child: Image.asset(
