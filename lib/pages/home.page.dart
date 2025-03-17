@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:test_1/pages/%E2%80%AFunlock.page.dart';
 import 'package:test_1/services/game_state.service.dart';
 import 'package:test_1/pages/artisanat.page.dart';
 import 'package:test_1/pages/fonderie.page.dart';
@@ -23,6 +24,7 @@ class _HomeScreenState extends State<HomeScreen> {
     const MarketPage(),
     const FonderiePage(),
     const ArtisanatPage(),
+    const UnlockingPage(),
   ];
 
   void _onItemTapped(int index) {
@@ -103,6 +105,7 @@ class _HomeScreenState extends State<HomeScreen> {
             icon: Icon(Icons.handyman),
             label: 'Artisanat',
           ),
+          BottomNavigationBarItem(icon: Icon(Icons.lock), label: 'Déblocage'),
         ],
         currentIndex: _selectedIndex,
         onTap: _onItemTapped,

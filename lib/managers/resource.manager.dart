@@ -44,8 +44,36 @@ class ResourceManager {
     }
   }
 
+  void attemptUnlockResource(String resourceId) {
+    final resource = resources[resourceId];
+    if (resource == null) return;
+    if (resource.unlock) return; // déjà débloquée ?
+    if (resource.unlockCost == null) return; // pas de coût ?
+
+    // Vérifier si on peut payer le coût
+    final canPay = resource.unlockCost!.entries.every((entry) {
+      final have = resources[entry.key]?.amount ?? BigInt.zero;
+      return have >= entry.value;
+    });
+    if (!canPay) return;
+
+    // Déduire le coût
+    for (var entry in resource.unlockCost!.entries) {
+      final cost = entry.value;
+      resources[entry.key]!.amount -= cost;
+    }
+
+    // Marquer la ressource comme débloquée
+    resource.unlock = true;
+  }
+
   List<Resource> get unlockedResources =>
       resources.values
           .where((res) => res.unlock && res.id != 'dollar')
+          .toList();
+
+  List<Resource> get lockedResources =>
+      resources.values
+          .where((res) => !res.unlock && res.unlockCost != null)
           .toList();
 }

@@ -3,7 +3,7 @@
     {
       "id": "dollar",
       "name": "Dollars",
-      "initialAmount": 0,
+      "initialAmount": 1000000000,
       "unlock": true,
       "value": 1,
       "isCurrency": true
@@ -22,7 +22,7 @@
       "initialAmount": 1000,
       "unlock": false,
       "unlockCost": {
-        "wood": 50
+        "dollar": 1000000000
       },
       "value": 2,
       "isCurrency": false
@@ -33,8 +33,7 @@
       "initialAmount": 0,
       "unlock": false,
       "unlockCost": {
-        "wood": 100,
-        "stone": 50
+        "dollar": 1000000000000000000
       },
       "value": 3,
       "isCurrency": false
@@ -46,8 +45,7 @@
       "unlock": false,
       "value": 0,
       "unlockCost": {
-        "wood": 100,
-        "stone": 50
+        "dollar": 1000000000000000000000000000000000000
       },
       "isCurrency": false
     }
@@ -57,7 +55,8 @@
       "id": "sawmill",
       "name": "Sawmill",
       "cost": {
-        "wood": 50
+        "wood": 50,
+        "dollar": 1000
       },
       "production": {
         "wood": 1
@@ -71,7 +70,8 @@
       "name": "Stone Pile",
       "cost": {
         "wood": 50,
-        "stone": 1
+        "stone": 1,
+        "dollar": 10000
       },
       "production": {
         "stone": 1
@@ -85,7 +85,8 @@
       "name": "Quarry",
       "cost": {
         "wood": 100,
-        "stone": 25
+        "stone": 25,
+        "dollar": 100000
       },
       "production": {
         "stone": 5

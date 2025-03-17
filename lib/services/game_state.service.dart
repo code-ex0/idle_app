@@ -66,14 +66,24 @@ class GameState extends ChangeNotifier {
     if (amount < BigInt.from(1000)) {
       return amount.toString();
     }
-    final List<String> suffixes = ['A', 'B', 'C', 'D', 'E', 'F'];
     double value = amount.toDouble();
-    int suffixIndex = 0;
-    while (value >= 1000 && suffixIndex < suffixes.length) {
+    int divisions = 0;
+    while (value >= 1000) {
       value /= 1000;
-      suffixIndex++;
+      divisions++;
     }
-    return '${value.toStringAsFixed(2)} ${suffixes[suffixIndex - 1]}';
+    return '${value.toStringAsFixed(2)} ${_intToAlphabeticSuffix(divisions)}';
+  }
+
+  static String _intToAlphabeticSuffix(int n) {
+    String result = '';
+    while (n > 0) {
+      n--; // ajuste car A correspond à 1
+      int remainder = n % 26;
+      result = String.fromCharCode(65 + remainder) + result;
+      n = n ~/ 26;
+    }
+    return result;
   }
 
   static Future<GameState> loadGameState() async {
@@ -87,17 +97,6 @@ class GameState extends ChangeNotifier {
       for (var res in resourcesData)
         (res['id'] as String): Resource.fromJson(res),
     };
-
-    // Assurer que la ressource "dollar" est présente.
-    if (!resources.containsKey('dollar')) {
-      resources['dollar'] = Resource(
-        id: 'dollar',
-        name: 'Dollars',
-        initialAmount: 0,
-        unlock: true,
-        value: 0,
-      );
-    }
 
     final List<dynamic> buildingsData = jsonData['buildings'];
     final Map<String, Building> buildingConfigs = {
