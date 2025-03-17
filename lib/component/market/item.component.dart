@@ -2,13 +2,17 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:test_1/services/game_state.service.dart';
 import 'package:test_1/interfaces/resource.interface.dart';
+import 'package:test_1/pages/market_advanced.page.dart';
 
 class MarketItem extends StatelessWidget {
   const MarketItem({super.key, required this.resource});
 
   final Resource resource;
 
-  String get priceText => 'Prix de vente: ${resource.value}';
+  String get priceText {
+    final sellPrice = resource.value;
+    return 'Prix de vente: $sellPrice';
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -21,7 +25,7 @@ class MarketItem extends StatelessWidget {
     return Card(
       margin: const EdgeInsets.symmetric(vertical: 6, horizontal: 8),
       child: Column(
-        children: [
+        children: <Widget>[
           ListTile(
             leading: SizedBox(
               width: 50,
@@ -39,17 +43,18 @@ class MarketItem extends StatelessWidget {
             trailing: Column(
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.end,
-              children: [
+              children: <Widget>[
                 Text('Stock: $stockText'),
                 const SizedBox(height: 4),
-                Text('Prod: $productionRate / s'),
+                Text('Prod: ${productionRate.toString()} / s'),
               ],
             ),
           ),
           OverflowBar(
             alignment: MainAxisAlignment.end,
             spacing: 8,
-            children: [
+            children: <Widget>[
+              // Boutons de vente automatique
               TextButton(
                 onPressed:
                     () => context.read<GameState>().sellResource(
@@ -73,6 +78,18 @@ class MarketItem extends StatelessWidget {
                       resource.amount,
                     ),
                 child: const Text('Vendre all'),
+              ),
+              // Bouton pour ouvrir le marché avancé
+              TextButton(
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const MarketAdvancedPage(),
+                    ),
+                  );
+                },
+                child: const Text('Avancé'),
               ),
             ],
           ),

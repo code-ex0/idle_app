@@ -6,11 +6,13 @@ import 'package:flutter/services.dart';
 import 'package:test_1/interfaces/building.interface.dart';
 import 'package:test_1/interfaces/resource.interface.dart';
 import 'package:test_1/managers/building.manager.dart';
+import 'package:test_1/managers/market.manager.dart';
 import 'package:test_1/managers/resource.manager.dart';
 
 class GameState extends ChangeNotifier {
   final ResourceManager resourceManager;
   final BuildingManager buildingManager;
+  final MarketManager marketManager;
 
   Timer? _timer;
 
@@ -21,7 +23,11 @@ class GameState extends ChangeNotifier {
     required Map<String, Resource> resources,
     required Map<String, Building> buildingConfigs,
   }) : resourceManager = ResourceManager(resources: resources),
-       buildingManager = BuildingManager(buildingConfigs: buildingConfigs) {
+       buildingManager = BuildingManager(buildingConfigs: buildingConfigs),
+       marketManager = MarketManager(
+         resourceIds: resources.keys.toList(),
+         volatility: 0.05,
+       ) {
     _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
       tick();
     });
@@ -54,6 +60,8 @@ class GameState extends ChangeNotifier {
 
   void tick() {
     buildingManager.tick(resourceManager);
+    marketManager.updatePrices({});
+
     notifyListeners();
   }
 
