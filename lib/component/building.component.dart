@@ -1,34 +1,32 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:test_1/game_state.dart';
-import 'package:test_1/interfaces/building.interface.dart';
+import 'package:test_1/interfaces/building_group.interface.dart';
+import 'package:test_1/services/game_state.service.dart';
 
 class BuildingComponent extends StatelessWidget {
-  const BuildingComponent({required Key key, required this.building})
-    : super(key: key);
-
-  final Building building;
+  const BuildingComponent({super.key, required this.group});
+  final BuildingGroup group;
 
   String get costText =>
-      building.cost.entries.map((e) => '${e.key}: ${e.value}').join(', ');
+      group.config.cost.entries.map((e) => '${e.key}: ${e.value}').join(', ');
 
   bool _canAfford(BuildContext context) {
     final gameState = Provider.of<GameState>(context, listen: false);
-    return building.cost.entries.every((entry) {
-      final resource = gameState.resources[entry.key];
+    return group.config.cost.entries.every((entry) {
+      final resource = gameState.resourceManager.resources[entry.key];
       return resource != null && resource.amount >= entry.value;
     });
   }
 
   String _missingResourcesText(BuildContext context) {
     final gameState = Provider.of<GameState>(context, listen: false);
-    return building.cost.entries
+    return group.config.cost.entries
         .where((entry) {
-          final resource = gameState.resources[entry.key];
+          final resource = gameState.resourceManager.resources[entry.key];
           return resource == null || resource.amount < entry.value;
         })
         .map((entry) {
-          final resource = gameState.resources[entry.key];
+          final resource = gameState.resourceManager.resources[entry.key];
           final diff =
               (resource == null) ? entry.value : entry.value - resource.amount;
           return '${entry.key}: ${diff.toString()}';
@@ -38,24 +36,22 @@ class BuildingComponent extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final gameState = context.watch<GameState>();
     final affordable = _canAfford(context);
     final missingText = _missingResourcesText(context);
     final maxBuy = GameState.formatResourceAmount(
-      gameState.calculateMaxBuy(building.id),
+      context.read<GameState>().buildingManager.calculateMaxBuy(
+        group.config.id,
+        context.read<GameState>().resourceManager,
+      ),
     );
-    final group = gameState.buildingGroups[building.id];
-    final quantity =
-        group != null ? GameState.formatResourceAmount(group.count) : '0';
+    final quantity = GameState.formatResourceAmount(group.count);
 
     String durabilityText = '';
     double durabilityProgress = 1.0;
-    if (!building.infiniteDurability &&
-        group != null &&
-        group.count > BigInt.zero) {
+    if (!group.config.infiniteDurability && group.count > BigInt.zero) {
       durabilityText =
-          'Durabilité: ${group.lowestDurability} / ${building.durability}';
-      durabilityProgress = group.lowestDurability / building.durability;
+          'Durabilité: ${group.lowestDurability} / ${group.config.durability}';
+      durabilityProgress = group.lowestDurability / group.config.durability;
     }
 
     return Card(
@@ -66,14 +62,14 @@ class BuildingComponent extends StatelessWidget {
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Image dans un carré fixe
+            // Image dans un carré fixe.
             Container(
               width: 80,
               height: 80,
               margin: const EdgeInsets.only(right: 8),
               color: Colors.grey[300],
               child: Image.asset(
-                'assets/icon/${building.id}.png',
+                'assets/icon/${group.config.id}.png',
                 fit: BoxFit.cover,
                 errorBuilder:
                     (context, error, stackTrace) =>
@@ -84,14 +80,14 @@ class BuildingComponent extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Ligne avec icône, nom et quantité
+                  // Ligne avec icône, nom et quantité.
                   Row(
                     children: [
                       const Icon(Icons.home),
                       const SizedBox(width: 4),
                       Expanded(
                         child: Text(
-                          building.name,
+                          group.config.name,
                           style: const TextStyle(
                             fontSize: 16,
                             fontWeight: FontWeight.bold,
@@ -102,12 +98,11 @@ class BuildingComponent extends StatelessWidget {
                     ],
                   ),
                   const SizedBox(height: 4),
-                  // Affichage du coût
+                  // Affichage du coût.
                   Text('Prix: $costText'),
                   const SizedBox(height: 4),
-                  // Affichage de la durabilité si applicable
-                  if (!building.infiniteDurability &&
-                      group != null &&
+                  // Affichage de la durabilité si applicable.
+                  if (!group.config.infiniteDurability &&
                       group.count > BigInt.zero)
                     Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -120,7 +115,7 @@ class BuildingComponent extends StatelessWidget {
                       ],
                     ),
                   const SizedBox(height: 4),
-                  // Ligne avec message "Manque" et boutons alignés
+                  // Ligne avec le message "Manque" et les boutons d'achat.
                   Row(
                     children: [
                       Expanded(
@@ -136,7 +131,7 @@ class BuildingComponent extends StatelessWidget {
                         onPressed:
                             affordable
                                 ? () => context.read<GameState>().buyBuilding(
-                                  building.id,
+                                  group.config.id,
                                 )
                                 : null,
                         child: const Text('Construire'),
@@ -146,7 +141,7 @@ class BuildingComponent extends StatelessWidget {
                             affordable
                                 ? () => context
                                     .read<GameState>()
-                                    .buyBuildingMax(building.id)
+                                    .buyBuildingMax(group.config.id)
                                 : null,
                         child: Text('Acheter Max ($maxBuy)'),
                       ),

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:test_1/game_state.dart';
+import 'package:test_1/services/game_state.service.dart';
 import 'package:test_1/pages/artisanat.page.dart';
 import 'package:test_1/pages/fonderie.page.dart';
 import 'package:test_1/pages/market.page.dart';
@@ -35,13 +35,22 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
+        title: const Text('Idle Dolard Game'),
         actions: [
           Consumer<GameState>(
             builder: (context, gameState, child) {
-              final gold = gameState.resources['dollar']?.amount ?? 0;
+              // On suppose que la ressource monnaie s'appelle "dollar" dans vos données.
+              final currencyAmount =
+                  gameState.resourceManager.resources['dollar']?.amount ??
+                  BigInt.zero;
               return Padding(
                 padding: const EdgeInsets.all(8.0),
-                child: Center(child: Text('$gold \$')),
+                child: Center(
+                  child: Text(
+                    '${GameState.formatResourceAmount(currencyAmount)} \$',
+                    style: const TextStyle(fontSize: 16),
+                  ),
+                ),
               );
             },
           ),
@@ -50,7 +59,7 @@ class _HomeScreenState extends State<HomeScreen> {
       body: Stack(
         children: [
           _pages[_selectedIndex],
-
+          // Bouton de clic positionné au-dessus de la BottomNavigationBar.
           Positioned(
             bottom: 60,
             left: 0,
@@ -58,9 +67,8 @@ class _HomeScreenState extends State<HomeScreen> {
             child: Center(
               child: ElevatedButton(
                 onPressed:
-                    () => context.read<GameState>().clickResource('wood'),
+                    () => context.read<GameState>().clickResource('dollar'),
                 style: ElevatedButton.styleFrom(
-                  // radius to zero
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.zero,
                   ),
@@ -75,9 +83,8 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
         ],
       ),
-
       bottomNavigationBar: BottomNavigationBar(
-        type: BottomNavigationBarType.fixed, // Permet d'afficher 5 onglets
+        type: BottomNavigationBarType.fixed,
         items: const <BottomNavigationBarItem>[
           BottomNavigationBarItem(
             icon: Icon(Icons.carpenter),

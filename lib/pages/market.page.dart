@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:test_1/component/market/item.component.dart';
-import 'package:test_1/game_state.dart';
+import 'package:test_1/services/game_state.service.dart';
 
 class MarketPage extends StatelessWidget {
   const MarketPage({super.key});
@@ -12,8 +12,8 @@ class MarketPage extends StatelessWidget {
       appBar: AppBar(title: const Text('Marché')),
       body: Consumer<GameState>(
         builder: (context, gameState, child) {
-          // Convertir la map en liste
-          final resourcesList = gameState.getResourcesList;
+          // Utilisation du getter pour filtrer les ressources à afficher.
+          final resourcesList = gameState.resourceManager.unlockedResources;
           return ListView.builder(
             itemCount: resourcesList.length,
             itemBuilder: (context, index) {

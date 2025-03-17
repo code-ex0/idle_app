@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:test_1/component/building_list.component.dart';
-import 'package:test_1/game_state.dart';
+import 'package:test_1/services/game_state.service.dart';
 import 'package:test_1/interfaces/building.enum.dart';
 
 class FonderiePage extends StatelessWidget {
@@ -13,10 +13,7 @@ class FonderiePage extends StatelessWidget {
       appBar: AppBar(title: const Text('Fonderie')),
       body: Consumer<GameState>(
         builder: (context, gameState, child) {
-          return BuildingListComponent(
-            buildings: gameState.buildingConfigs,
-            type: BuildingType.foundry,
-          );
+          return BuildingListComponent(type: BuildingType.foundry);
         },
       ),
     );

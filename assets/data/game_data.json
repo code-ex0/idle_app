@@ -43,7 +43,7 @@
       "id": "gold",
       "name": "Or",
       "initialAmount": 0,
-      "unlock": true,
+      "unlock": false,
       "value": 0,
       "unlockCost": {
         "wood": 100,

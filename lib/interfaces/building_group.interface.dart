@@ -16,6 +16,15 @@ class BuildingGroup {
     }
   }
 
+  void addUnits(BigInt amount) {
+    count += amount;
+    if (!config.infiniteDurability) {
+      for (BigInt i = BigInt.zero; i < amount; i += BigInt.one) {
+        listDurabilitys.add(config.durability);
+      }
+    }
+  }
+
   void degrade(int degradationPerTick) {
     if (!config.infiniteDurability && count > BigInt.zero) {
       for (int i = 0; i < count.toInt(); i++) {

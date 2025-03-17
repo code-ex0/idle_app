@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:test_1/game_state.dart';
+import 'package:test_1/services/game_state.service.dart';
 import 'package:test_1/interfaces/resource.interface.dart';
 
 class MarketItem extends StatelessWidget {
@@ -8,23 +8,20 @@ class MarketItem extends StatelessWidget {
 
   final Resource resource;
 
-  String get priceText {
-    final sellPrice = (resource.value).round();
-    return 'Prix de vente: $sellPrice';
-  }
+  String get priceText => 'Prix de vente: ${resource.value}';
 
   @override
   Widget build(BuildContext context) {
     final gameState = context.watch<GameState>();
     final stockText = GameState.formatResourceAmount(resource.amount);
     final productionRate = GameState.formatResourceAmount(
-      gameState.rateProduction(resource.id),
+      gameState.buildingManager.rateProduction(resource.id),
     );
 
     return Card(
       margin: const EdgeInsets.symmetric(vertical: 6, horizontal: 8),
       child: Column(
-        children: <Widget>[
+        children: [
           ListTile(
             leading: SizedBox(
               width: 50,
@@ -32,9 +29,9 @@ class MarketItem extends StatelessWidget {
               child: Image.asset(
                 'assets/icon/resources/${resource.id}.png',
                 fit: BoxFit.cover,
-                errorBuilder: (context, error, stackTrace) {
-                  return const Center(child: Icon(Icons.image, size: 30));
-                },
+                errorBuilder:
+                    (context, error, stackTrace) =>
+                        const Center(child: Icon(Icons.image, size: 30)),
               ),
             ),
             title: Text(resource.name),
@@ -42,48 +39,40 @@ class MarketItem extends StatelessWidget {
             trailing: Column(
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.end,
-              children: <Widget>[
+              children: [
                 Text('Stock: $stockText'),
                 const SizedBox(height: 4),
-                Text('Prod: ${productionRate.toString()} / s'),
+                Text('Prod: $productionRate / s'),
               ],
             ),
           ),
           OverflowBar(
             alignment: MainAxisAlignment.end,
             spacing: 8,
-            children: <Widget>[
-              Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  TextButton(
-                    onPressed: () {
-                      context.read<GameState>().sellResource(
-                        resource.id,
-                        BigInt.one,
-                      );
-                    },
-                    child: const Text('Vendre'),
-                  ),
-                  TextButton(
-                    onPressed: () {
-                      context.read<GameState>().sellResource(
-                        resource.id,
-                        BigInt.from(10),
-                      );
-                    },
-                    child: const Text('Vendre 10'),
-                  ),
-                  TextButton(
-                    onPressed: () {
-                      context.read<GameState>().sellResource(
-                        resource.id,
-                        resource.amount,
-                      );
-                    },
-                    child: const Text('Vendre all'),
-                  ),
-                ],
+            children: [
+              TextButton(
+                onPressed:
+                    () => context.read<GameState>().sellResource(
+                      resource.id,
+                      BigInt.one,
+                    ),
+                child: const Text('Vendre'),
+              ),
+              TextButton(
+                onPressed:
+                    () => context.read<GameState>().sellResource(
+                      resource.id,
+                      BigInt.from(10),
+                    ),
+                child: const Text('Vendre 10'),
+              ),
+              TextButton(
+                onPressed:
+                    () => context.read<GameState>().sellResource(
+                      resource.id,
+                      resource.amount,
+                    ),
+                child: const Text('Vendre all'),
               ),
             ],
           ),
