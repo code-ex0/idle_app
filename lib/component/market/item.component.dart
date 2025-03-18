@@ -85,7 +85,9 @@ class MarketItem extends StatelessWidget {
                   Navigator.push(
                     context,
                     MaterialPageRoute(
-                      builder: (context) => const MarketAdvancedPage(),
+                      builder:
+                          (context) =>
+                              MarketTradingPage(resourceId: resource.id),
                     ),
                   );
                 },

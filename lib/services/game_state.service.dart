@@ -15,6 +15,7 @@ class GameState extends ChangeNotifier {
   final MarketManager marketManager;
 
   Timer? _timer;
+  Timer? _tradingTimer;
 
   // Objectif : atteindre un certain nombre de Dolard.
   final BigInt dolardTarget = BigInt.from(1000000);
@@ -31,6 +32,9 @@ class GameState extends ChangeNotifier {
     _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
       tick();
     });
+    _tradingTimer = Timer.periodic(const Duration(seconds: 60), (timer) {
+      trade();
+    });
   }
 
   void clickResource(String resourceId) {
@@ -39,7 +43,61 @@ class GameState extends ChangeNotifier {
   }
 
   void sellResource(String resourceId, BigInt quantity) {
-    resourceManager.sellResource(resourceId, quantity);
+    // Vérifier que la ressource existe et qu'on a suffisamment de stock.
+    final resource = resourceManager.resources[resourceId];
+    if (resource == null || resource.amount < quantity) return;
+
+    // Déduire la quantité vendue.
+    resource.amount -= quantity;
+
+    // Récupérer le prix courant du marché pour cette ressource.
+    final marketPrice = marketManager.prices[resourceId] ?? 1.0;
+
+    // Calculer le revenu de la vente.
+    // Ici, on peut utiliser la valeur de base de la ressource (resource.value) ou le prix du marché.
+    // Par exemple, revenu = quantity * resource.value * marketPrice.
+    // Vous pouvez ajuster cette formule selon votre modèle économique.
+    final double revenue = marketPrice * resource.value * quantity.toDouble();
+
+    // Créditer la monnaie (ici, on suppose que la ressource monétaire s'appelle 'dollar').
+    final currency = resourceManager.resources['dollar'];
+    if (currency != null) {
+      // On peut convertir le revenu en BigInt (en supposant que le revenu est arrondi)
+      currency.amount += BigInt.from(revenue);
+    }
+
+    // Mettre à jour la pression de vente sur le marché.
+    // On considère que la quantité vendue influence la pression (volume en double).
+    marketManager.sellMarket(resourceId, quantity.toInt());
+
+    // Notifier les auditeurs pour mettre à jour l'UI.
+    notifyListeners();
+  }
+
+  void buyResource(String resourceId, BigInt quantity) {
+    // Vérifier que la ressource existe et qu'on a suffisamment de monnaie.
+    final resource = resourceManager.resources[resourceId];
+    final currency = resourceManager.resources['dollar'];
+    if (resource == null || currency == null) return;
+
+    // Calculer le coût total de l'achat.
+    final marketPrice = marketManager.prices[resourceId] ?? 1.0;
+    final totalCost = marketPrice * quantity.toDouble();
+
+    // Vérifier que l'acheteur a suffisamment de monnaie.
+    if (currency.amount < BigInt.from(totalCost)) return;
+
+    // Déduire le coût de l'achat.
+    currency.amount -= BigInt.from(totalCost);
+
+    // Ajouter la quantité achetée.
+    resource.amount += quantity;
+
+    // Mettre à jour la pression d'achat sur le marché.
+    // On considère que la quantité achetée influence la pression (volume en double).
+    marketManager.buyMarket(resourceId, quantity.toInt());
+
+    // Notifier les auditeurs pour mettre à jour l'UI.
     notifyListeners();
   }
 
@@ -60,8 +118,6 @@ class GameState extends ChangeNotifier {
 
   void tick() {
     buildingManager.tick(resourceManager);
-    marketManager.updatePrices({});
-
     notifyListeners();
   }
 
@@ -118,6 +174,11 @@ class GameState extends ChangeNotifier {
   @override
   void dispose() {
     _timer?.cancel();
+    _tradingTimer?.cancel();
     super.dispose();
+  }
+
+  void trade() {
+    marketManager.updatePrices();
   }
 }
