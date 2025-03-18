@@ -32,7 +32,7 @@ class GameState extends ChangeNotifier {
     _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
       tick();
     });
-    _tradingTimer = Timer.periodic(const Duration(seconds: 60), (timer) {
+    _tradingTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
       trade();
     });
   }
@@ -68,7 +68,7 @@ class GameState extends ChangeNotifier {
 
     // Mettre à jour la pression de vente sur le marché.
     // On considère que la quantité vendue influence la pression (volume en double).
-    marketManager.sellMarket(resourceId, quantity.toInt());
+    // marketManager.sellMarket(resourceId, 1);
 
     // Notifier les auditeurs pour mettre à jour l'UI.
     notifyListeners();
@@ -95,7 +95,7 @@ class GameState extends ChangeNotifier {
 
     // Mettre à jour la pression d'achat sur le marché.
     // On considère que la quantité achetée influence la pression (volume en double).
-    marketManager.buyMarket(resourceId, quantity.toInt());
+    // marketManager.buyMarket(resourceId, 1);
 
     // Notifier les auditeurs pour mettre à jour l'UI.
     notifyListeners();
@@ -179,6 +179,6 @@ class GameState extends ChangeNotifier {
   }
 
   void trade() {
-    marketManager.updatePrices();
+    marketManager.updatePrices({});
   }
 }
