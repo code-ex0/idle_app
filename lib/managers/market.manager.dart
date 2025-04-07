@@ -8,9 +8,12 @@ class MarketManager {
   final Map<String, List<double>> _priceHistory = {};
 
   /// Le coefficient de volatilité pour les variations de prix.
-  final double volatility;
+  double volatility;
 
   final Random _random = Random();
+
+  final Map<String, List<MarketTransaction>> _transactions = {};
+  final int _maxHistorySize = 100;
 
   MarketManager({required List<String> resourceIds, this.volatility = 0.05}) {
     // Initialisation : tous les prix commencent à 1.0 et on crée l'historique initial.
@@ -48,14 +51,49 @@ class MarketManager {
   }
 
   /// Simule une transaction d'achat.
-  bool buy(String resourceId, int quantity, double offeredPrice) {
+  bool buy(String resourceId, BigInt quantity, double offeredPrice) {
     final currentPrice = prices[resourceId] ?? 1.0;
     return offeredPrice >= currentPrice;
   }
 
   /// Simule une transaction de vente.
-  bool sell(String resourceId, int quantity, double askedPrice) {
+  bool sell(String resourceId, BigInt quantity, double askedPrice) {
     final currentPrice = prices[resourceId] ?? 1.0;
     return askedPrice <= currentPrice;
   }
+
+  /// Définit la nouvelle valeur de volatilité du marché.
+  void setVolatility(double newVolatility) {
+    volatility = newVolatility;
+  }
+
+  void addTransaction(String resourceId, MarketTransaction transaction) {
+    if (!_transactions.containsKey(resourceId)) {
+      _transactions[resourceId] = [];
+    }
+    _transactions[resourceId]!.add(transaction);
+    
+    // Conserver seulement les 100 derniers points.
+    if (_transactions[resourceId]!.length > _maxHistorySize) {
+      _transactions[resourceId]!.removeAt(0);
+    }
+  }
+
+  List<MarketTransaction> getTransactionHistory(String resourceId) {
+    return _transactions[resourceId] ?? [];
+  }
+}
+
+class MarketTransaction {
+  final DateTime timestamp;
+  final BigInt quantity;
+  final double price;
+  final bool isBuy;
+
+  MarketTransaction({
+    required this.timestamp,
+    required this.quantity,
+    required this.price,
+    required this.isBuy,
+  });
 }

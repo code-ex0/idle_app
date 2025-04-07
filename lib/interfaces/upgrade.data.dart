@@ -3,9 +3,9 @@ class Upgrade {
   final String name;
   final int level;
   // Coût de base de l'upgrade
-  final Map<String, int> baseCost;
+  final Map<String, BigInt> baseCost;
   // Effet de l'upgrade, par exemple un mapping de bonus { bonusType: valeur }
-  final Map<String, int> effect;
+  final Map<String, BigInt> effect;
   // Indique si l'upgrade peut être améliorée indéfiniment
   final bool infiniteUpgrade;
 
@@ -23,8 +23,12 @@ class Upgrade {
       id: json['id'] as String,
       name: json['name'] as String,
       level: json['level'] as int,
-      baseCost: Map<String, int>.from(json['baseCost']),
-      effect: Map<String, int>.from(json['effect']),
+      baseCost: (json['baseCost'] as Map<String, dynamic>).map(
+        (key, value) => MapEntry(key, BigInt.from(value)),
+      ),
+      effect: (json['effect'] as Map<String, dynamic>).map(
+        (key, value) => MapEntry(key, BigInt.from(value)),
+      ),
       infiniteUpgrade: json['infiniteUpgrade'] as bool,
     );
   }
@@ -33,8 +37,8 @@ class Upgrade {
     'id': id,
     'name': name,
     'level': level,
-    'baseCost': baseCost,
-    'effect': effect,
+    'baseCost': baseCost.map((key, value) => MapEntry(key, value.toString())),
+    'effect': effect.map((key, value) => MapEntry(key, value.toString())),
     'infiniteUpgrade': infiniteUpgrade,
   };
 }

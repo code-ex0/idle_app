@@ -7,15 +7,15 @@ class ResourceManager {
   ResourceManager({required this.resources}) {
     // Initialiser chaque ressource à partir de son initialAmount.
     for (var res in resources.values) {
-      res.amount = BigInt.from(res.initialAmount);
+      res.amount = res.initialAmount;
     }
   }
 
   void clickResource(String resourceId) {
     final resource = resources[resourceId];
-    if (resource == null) return;
-    if (resource.unlock) {
-      resource.amount += BigInt.from(resource.value);
+    if (resource != null && resource.isUnlocked) {
+      // Ajouter la valeur de la ressource à la ressource elle-même
+      resource.amount += BigInt.one;
     }
   }
 
@@ -27,27 +27,21 @@ class ResourceManager {
     // On crédite la ressource "dollar" (monnaie) directement.
     final dollar = resources['dollar'];
     if (dollar != null) {
-      dollar.amount += BigInt.from(resource.value) * quantity;
+      dollar.amount += resource.value * quantity;
     }
   }
 
   void unlockResource(String resourceId) {
     final resource = resources[resourceId];
-    if (resource != null && !resource.unlock) {
-      resources[resourceId] = Resource(
-        id: resource.id,
-        name: resource.name,
-        initialAmount: resource.initialAmount,
-        unlock: true,
-        value: resource.value,
-      );
+    if (resource != null && !resource.isUnlocked) {
+      resource.isUnlocked = true;
     }
   }
 
   void attemptUnlockResource(String resourceId) {
     final resource = resources[resourceId];
     if (resource == null) return;
-    if (resource.unlock) return; // déjà débloquée ?
+    if (resource.isUnlocked) return; // déjà débloquée ?
     if (resource.unlockCost == null) return; // pas de coût ?
 
     // Vérifier si on peut payer le coût
@@ -64,16 +58,31 @@ class ResourceManager {
     }
 
     // Marquer la ressource comme débloquée
-    resource.unlock = true;
+    resource.isUnlocked = true;
   }
 
   List<Resource> get unlockedResources =>
       resources.values
-          .where((res) => res.unlock && res.id != 'dollar')
+          .where((res) => res.isUnlocked && res.id != 'dollar')
           .toList();
 
   List<Resource> get lockedResources =>
       resources.values
-          .where((res) => !res.unlock && res.unlockCost != null)
+          .where((res) => !res.isUnlocked && res.unlockCost != null)
           .toList();
+          
+  Map<String, dynamic> toJson() => {
+    for (var entry in resources.entries)
+      entry.key: entry.value.toJson()
+  };
+
+  void fromJson(Map<String, dynamic> json) {
+    json.forEach((key, value) {
+      if (resources.containsKey(key)) {
+        final resource = Resource.fromJson(value);
+        resources[key]!.amount = resource.amount;
+        resources[key]!.isUnlocked = resource.isUnlocked;
+      }
+    });
+  }
 }

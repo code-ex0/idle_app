@@ -130,9 +130,7 @@ class BuildingComponent extends StatelessWidget {
                       TextButton(
                         onPressed:
                             affordable
-                                ? () => context.read<GameState>().buyBuilding(
-                                  group.config.id,
-                                )
+                                ? () => context.read<GameState>().buyBuilding(group.config.id)
                                 : null,
                         child: const Text('Construire'),
                       ),

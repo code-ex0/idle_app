@@ -3,34 +3,39 @@ import 'package:test_1/interfaces/building.interface.dart';
 class BuildingGroup {
   final Building config;
   BigInt count;
-  List<int> listDurabilitys;
+  List<BigInt> listDurabilitys;
+  BigInt currentDurability;
 
-  BuildingGroup({required this.config})
-    : count = BigInt.zero,
-      listDurabilitys = [];
+  BuildingGroup({
+    required this.config,
+  }) : count = BigInt.zero,
+       listDurabilitys = [],
+       currentDurability = config.durability;
 
   void addUnit() {
     count += BigInt.one;
-    if (!config.infiniteDurability) {
-      listDurabilitys.add(config.durability);
-    }
+    listDurabilitys.add(config.durability);
   }
 
   void addUnits(BigInt amount) {
-    count += amount;
-    if (!config.infiniteDurability) {
-      for (BigInt i = BigInt.zero; i < amount; i += BigInt.one) {
-        listDurabilitys.add(config.durability);
-      }
+    if (amount <= BigInt.zero) return;
+    
+    for (BigInt i = BigInt.zero; i < amount; i += BigInt.one) {
+      addUnit();
     }
   }
 
-  void degrade(int degradationPerTick) {
+  void degrade(BigInt degradationPerTick) {
     if (!config.infiniteDurability && count > BigInt.zero) {
-      for (int i = 0; i < count.toInt(); i++) {
-        listDurabilitys[i] -= degradationPerTick;
+      for (BigInt i = BigInt.zero; i < count; i += BigInt.one) {
+        final index = i.toInt();
+        if (index < listDurabilitys.length) {
+          listDurabilitys[index] -= degradationPerTick;
+          if (listDurabilitys[index] <= BigInt.zero) {
+            listDurabilitys.removeAt(index);
+          }
+        }
       }
-      listDurabilitys.removeWhere((durability) => durability <= 0);
       count = BigInt.from(listDurabilitys.length);
     }
   }
@@ -40,12 +45,8 @@ class BuildingGroup {
     return prod * count;
   }
 
-  // get the building with the lowest durability
-  int get lowestDurability {
-    if (config.infiniteDurability) return 0;
-    if (listDurabilitys.isEmpty) return config.durability;
-    return listDurabilitys.reduce(
-      (value, element) => value < element ? value : element,
-    );
+  BigInt get lowestDurability {
+    if (listDurabilitys.isEmpty) return BigInt.zero;
+    return listDurabilitys.reduce((a, b) => a < b ? a : b);
   }
 }

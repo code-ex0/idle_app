@@ -7,6 +7,7 @@ import 'package:test_1/pages/fonderie.page.dart';
 import 'package:test_1/pages/market.page.dart';
 import 'package:test_1/pages/mine.page.dart';
 import 'package:test_1/pages/scierie.page.dart';
+import 'package:test_1/pages/achievements.page.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -51,6 +52,19 @@ class _HomeScreenState extends State<HomeScreen> {
                   child: Text(
                     '${GameState.formatResourceAmount(currencyAmount)} \$',
                     style: const TextStyle(fontSize: 16),
+                  ),
+                ),
+              );
+            },
+          ),
+          IconButton(
+            icon: const Icon(Icons.star),
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => AchievementsPage(
+                    achievementManager: context.read<GameState>().achievementManager,
                   ),
                 ),
               );

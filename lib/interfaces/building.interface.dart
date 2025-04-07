@@ -3,13 +3,13 @@ import 'package:test_1/interfaces/building.enum.dart';
 class Building {
   final String id;
   final String name;
-  final Map<String, BigInt> cost;
+  Map<String, BigInt> cost;
   final Map<String, BigInt> production;
-  final int durability;
+  final BigInt durability;
   final BuildingType type;
   final bool infiniteDurability;
   BigInt amount;
-  int currentDurability;
+  BigInt currentDurability;
 
   Building({
     required this.id,
@@ -21,8 +21,9 @@ class Building {
     required this.infiniteDurability,
 
     BigInt? amount,
-    this.currentDurability = 0,
-  }) : amount = amount ?? BigInt.from(0);
+    BigInt? currentDurability,
+  }) : amount = amount ?? BigInt.from(0),
+       currentDurability = currentDurability ?? durability;
 
   factory Building.fromJson(Map<String, dynamic> json) {
     return Building(
@@ -34,21 +35,25 @@ class Building {
       production: (json['production'] as Map<String, dynamic>).map(
         (key, value) => MapEntry(key, BigInt.from(value)),
       ),
-      durability: json['durability'] as int,
-      type: buildingTypeFromJson(json['type']),
+      durability: BigInt.from(json['durability']),
+      type: BuildingType.values.firstWhere(
+        (e) => e.toString() == 'BuildingType.${json['type']}',
+      ),
       infiniteDurability: json['infiniteDurability'] as bool,
+      amount: BigInt.parse(json['amount'] as String),
+      currentDurability: BigInt.parse(json['currentDurability'] as String),
     );
   }
 
   Map<String, dynamic> toJson() => {
     'id': id,
     'name': name,
-    'cost': cost,
-    'production': production,
-    'durability': durability,
-    'type': type,
+    'cost': cost.map((key, value) => MapEntry(key, value.toString())),
+    'production': production.map((key, value) => MapEntry(key, value.toString())),
+    'durability': durability.toString(),
+    'type': type.toString().split('.').last,
     'amount': amount.toString(),
-    'currentDurability': currentDurability,
+    'currentDurability': currentDurability.toString(),
     'infiniteDurability': infiniteDurability,
   };
 }
