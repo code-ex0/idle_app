@@ -13,27 +13,89 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      # Set up Flutter with explicit version
+      # Setup Java for Android builds
+      - uses: actions/setup-java@v3
+        with:
+          distribution: 'zulu'
+          java-version: '11'
+
+      # Set up Flutter
       - uses: subosito/flutter-action@v2
         with:
-          flutter-version: '3.16.0'  # Replace with the latest version if needed
+          flutter-version: '3.16.0'
+          cache: true  # Cache Flutter dependencies
 
-      # Upgrade Flutter (Optional)
-      - name: Upgrade Flutter
-        run: flutter upgrade
+      # Cache pub dependencies
+      - name: Cache Pub dependencies
+        uses: actions/cache@v3
+        with:
+          path: ${{ env.PUB_CACHE }}
+          key: ${{ runner.os }}-pub-${{ hashFiles('**/pubspec.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-pub-
 
       # Install dependencies
       - name: Install dependencies
         run: flutter pub get
 
-      # Verify formatting (optional)
-      # - name: Verify formatting
-      #   run: dart format --output=none --set-exit-if-changed .
+      # Check formatting
+      - name: Verify formatting
+        run: dart format --output=none --set-exit-if-changed .
 
       # Analyze project source code
       - name: Analyze project source
         run: flutter analyze
 
-      # Run tests
-      - name: Run tests
-        run: flutter test
+      # Run tests with coverage
+      - name: Run tests with coverage
+        run: flutter test --coverage
+
+      # Upload coverage reports
+      - name: Upload coverage reports
+        uses: codecov/codecov-action@v3
+        with:
+          file: coverage/lcov.info
+
+      # Build Android APK
+      - name: Build Android APK
+        run: flutter build apk --release
+
+      # Build Web
+      - name: Build Web
+        run: flutter build web --release
+
+      # Upload Android build
+      - name: Upload Android Build
+        uses: actions/upload-artifact@v3
+        with:
+          name: android-release
+          path: build/app/outputs/flutter-apk/app-release.apk
+          retention-days: 7
+
+      # Upload Web build
+      - name: Upload Web Build
+        uses: actions/upload-artifact@v3
+        with:
+          name: web-release
+          path: build/web
+          retention-days: 7
+
+  # Deploy to GitHub Pages
+  deploy-web:
+    needs: build
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/master'
+
+    steps:
+      - name: Download web build
+        uses: actions/download-artifact@v3
+        with:
+          name: web-release
+          path: web-build
+
+      - name: Deploy to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: web-build
+          force_orphan: true
