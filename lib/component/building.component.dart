@@ -45,111 +45,277 @@ class BuildingComponent extends StatelessWidget {
       ),
     );
     final quantity = GameState.formatResourceAmount(group.count);
+    final colorScheme = Theme.of(context).colorScheme;
+    final isActive = group.count > BigInt.zero;
 
     String durabilityText = '';
     double durabilityProgress = 1.0;
-    if (!group.config.infiniteDurability && group.count > BigInt.zero) {
+    if (!group.config.infiniteDurability && isActive) {
       durabilityText =
-          'Durabilité: ${group.lowestDurability} / ${group.config.durability}';
+          '${group.lowestDurability} / ${group.config.durability}';
       durabilityProgress = group.lowestDurability / group.config.durability;
     }
 
     return Card(
-      elevation: 3,
-      margin: const EdgeInsets.all(8),
-      child: Padding(
-        padding: const EdgeInsets.all(8.0),
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Image dans un carré fixe.
-            Container(
-              width: 80,
-              height: 80,
-              margin: const EdgeInsets.only(right: 8),
-              color: Colors.grey[300],
-              child: Image.asset(
-                'assets/icon/${group.config.id}.png',
-                fit: BoxFit.cover,
-                errorBuilder:
-                    (context, error, stackTrace) =>
-                        const Center(child: Icon(Icons.image, size: 40)),
+      elevation: 4,
+      margin: const EdgeInsets.symmetric(vertical: 10, horizontal: 12),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12),
+        side: BorderSide(
+          color: isActive ? colorScheme.primary.withAlpha(77) : Colors.transparent,
+          width: isActive ? 1.5 : 0,
+        ),
+      ),
+      child: Column(
+        children: [
+          // En-tête avec image et nom du bâtiment
+          Container(
+            decoration: BoxDecoration(
+              color: colorScheme.surfaceContainerHighest.withAlpha(77),
+              borderRadius: const BorderRadius.only(
+                topLeft: Radius.circular(12),
+                topRight: Radius.circular(12),
               ),
             ),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Ligne avec icône, nom et quantité.
-                  Row(
+            padding: const EdgeInsets.all(12),
+            child: Row(
+              children: [
+                Container(
+                  width: 60,
+                  height: 60,
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(8),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withAlpha(26),
+                        blurRadius: 4,
+                        offset: const Offset(0, 2),
+                      ),
+                    ],
+                  ),
+                  padding: const EdgeInsets.all(8),
+                  child: Image.asset(
+                    'assets/icon/${group.config.id}.png',
+                    fit: BoxFit.contain,
+                    errorBuilder: (context, error, stackTrace) =>
+                        Icon(Icons.house, size: 30, color: colorScheme.primary),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Icon(Icons.home),
-                      const SizedBox(width: 4),
-                      Expanded(
-                        child: Text(
-                          group.config.name,
-                          style: const TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
-                          ),
+                      Text(
+                        group.config.name,
+                        style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                          fontWeight: FontWeight.bold,
                         ),
                       ),
-                      Text('Quantité: $quantity'),
+                      const SizedBox(height: 4),
+                      Row(
+                        children: [
+                          Text(
+                            'Quantité: ',
+                            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                          Text(
+                            quantity,
+                            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                              fontWeight: FontWeight.bold,
+                              color: isActive ? colorScheme.primary : Colors.grey,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+          
+          // Informations principales
+          Padding(
+            padding: const EdgeInsets.all(12),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Production
+                Row(
+                  children: [
+                    Icon(
+                      Icons.precision_manufacturing_outlined,
+                      size: 18,
+                      color: colorScheme.secondary,
+                    ),
+                    const SizedBox(width: 8),
+                    Text(
+                      'Production: ',
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        color: colorScheme.onSurface,
+                      ),
+                    ),
+                    Expanded(
+                      child: Text(
+                        group.config.production.entries.map((e) => '${e.key}: ${e.value}').join(', '),
+                        style: TextStyle(
+                          color: colorScheme.onSurface,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 8),
+                
+                // Coût
+                Row(
+                  children: [
+                    Icon(
+                      Icons.monetization_on_outlined,
+                      size: 18,
+                      color: colorScheme.secondary,
+                    ),
+                    const SizedBox(width: 8),
+                    Text(
+                      'Coût: ',
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        color: colorScheme.onSurface,
+                      ),
+                    ),
+                    Expanded(
+                      child: Text(
+                        costText,
+                        style: TextStyle(
+                          color: affordable ? colorScheme.onSurface : Colors.red,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                
+                // Durabilité si applicable
+                if (!group.config.infiniteDurability && isActive) ...[
+                  const SizedBox(height: 8),
+                  Row(
+                    children: [
+                      Icon(
+                        Icons.health_and_safety_outlined,
+                        size: 18,
+                        color: colorScheme.secondary,
+                      ),
+                      const SizedBox(width: 8),
+                      Text(
+                        'Durabilité: ',
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          color: colorScheme.onSurface,
+                        ),
+                      ),
+                      Text(
+                        durabilityText,
+                        style: TextStyle(
+                          color: durabilityProgress > 0.5 ? Colors.green : 
+                                 durabilityProgress > 0.2 ? Colors.orange : Colors.red,
+                        ),
+                      ),
                     ],
                   ),
                   const SizedBox(height: 4),
-                  // Affichage du coût.
-                  Text('Prix: $costText'),
-                  const SizedBox(height: 4),
-                  // Affichage de la durabilité si applicable.
-                  if (!group.config.infiniteDurability &&
-                      group.count > BigInt.zero)
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          durabilityText,
-                          style: const TextStyle(fontSize: 12),
-                        ),
-                        LinearProgressIndicator(value: durabilityProgress),
-                      ],
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(4),
+                    child: LinearProgressIndicator(
+                      value: durabilityProgress,
+                      minHeight: 8,
+                      backgroundColor: Colors.grey.shade300,
+                      valueColor: AlwaysStoppedAnimation<Color>(
+                        durabilityProgress > 0.5 ? Colors.green : 
+                        durabilityProgress > 0.2 ? Colors.orange : Colors.red,
+                      ),
                     ),
-                  const SizedBox(height: 4),
-                  // Ligne avec le message "Manque" et les boutons d'achat.
+                  ),
+                ],
+                
+                // Message de ressources manquantes
+                if (!affordable && missingText.isNotEmpty) ...[
+                  const SizedBox(height: 8),
                   Row(
                     children: [
+                      Icon(
+                        Icons.warning_amber_rounded,
+                        size: 18,
+                        color: Colors.red,
+                      ),
+                      const SizedBox(width: 8),
                       Expanded(
-                        child:
-                            (!affordable && missingText.isNotEmpty)
-                                ? Text(
-                                  'Manque: $missingText',
-                                  style: const TextStyle(color: Colors.red),
-                                )
-                                : const SizedBox(),
-                      ),
-                      TextButton(
-                        onPressed:
-                            affordable
-                                ? () => context.read<GameState>().buyBuilding(group.config.id)
-                                : null,
-                        child: const Text('Construire'),
-                      ),
-                      TextButton(
-                        onPressed:
-                            affordable
-                                ? () => context
-                                    .read<GameState>()
-                                    .buyBuildingMax(group.config.id)
-                                : null,
-                        child: Text('Acheter Max ($maxBuy)'),
+                        child: Text(
+                          'Manque: $missingText',
+                          style: const TextStyle(
+                            color: Colors.red,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
                       ),
                     ],
                   ),
                 ],
+              ],
+            ),
+          ),
+          
+          // Boutons d'action
+          Container(
+            decoration: BoxDecoration(
+              color: colorScheme.surfaceContainerHighest.withAlpha(51),
+              borderRadius: const BorderRadius.only(
+                bottomLeft: Radius.circular(12),
+                bottomRight: Radius.circular(12),
               ),
             ),
-          ],
-        ),
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Expanded(
+                  child: ElevatedButton.icon(
+                    onPressed: affordable
+                        ? () => context.read<GameState>().buyBuilding(group.config.id)
+                        : null,
+                    icon: const Icon(Icons.build),
+                    label: const Text('Construire'),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: colorScheme.primary,
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(vertical: 10),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: ElevatedButton.icon(
+                    onPressed: affordable
+                        ? () => context
+                            .read<GameState>()
+                            .buyBuildingMax(group.config.id)
+                        : null,
+                    icon: const Icon(Icons.add_shopping_cart),
+                    label: Text('Max ($maxBuy)'),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: colorScheme.secondary,
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(vertical: 10),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }

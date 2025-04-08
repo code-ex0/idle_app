@@ -1,126 +1,66 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:test_1/interfaces/achievement.interface.dart';
+import 'package:test_1/interfaces/achievement.enum.dart';
 import 'package:test_1/managers/resource.manager.dart';
 import 'package:test_1/managers/building.manager.dart';
+import 'dart:async';
+
 
 class AchievementManager extends ChangeNotifier {
+  static final AchievementManager _instance = AchievementManager._internal();
   final Map<String, Achievement> _achievements = {};
   BigInt _totalPoints = BigInt.zero;
+
+  factory AchievementManager() {
+    return _instance;
+  }
+
+  AchievementManager._internal();
 
   Map<String, Achievement> get achievements => _achievements;
   BigInt get totalPoints => _totalPoints;
 
-  AchievementManager() {
-    _initializeAchievements();
+  Stream<Achievement> get achievementUnlockStream => _achievementStreamController.stream;
+  final _achievementStreamController = StreamController<Achievement>.broadcast();
+
+  Future<void> initialize() async {
+    await _initializeAchievements();
+    _startListening();
+    notifyListeners();
   }
 
-  void _initializeAchievements() {
-    // Resource achievements
-    _achievements['first_wood'] = Achievement(
-      id: 'first_wood',
-      name: 'Premier Bois',
-      description: 'Collectez votre premier bois',
-      type: AchievementType.resource,
-      requirements: {'resourceId': 'wood', 'amount': BigInt.from(1)},
-      icon: Icons.forest,
-      points: BigInt.from(10),
-    );
-
-    _achievements['wood_master'] = Achievement(
-      id: 'wood_master',
-      name: 'Maître du Bois',
-      description: 'Collectez 1000 bois',
-      type: AchievementType.resource,
-      requirements: {'resourceId': 'wood', 'amount': BigInt.from(1000)},
-      icon: Icons.forest,
-      points: BigInt.from(50),
-    );
-
-    // Building achievements
-    _achievements['first_building'] = Achievement(
-      id: 'first_building',
-      name: 'Premier Bâtiment',
-      description: 'Construisez votre premier bâtiment',
-      type: AchievementType.building,
-      requirements: {'buildingId': 'any', 'amount': BigInt.from(1)},
-      icon: Icons.business,
-      points: BigInt.from(20),
-    );
-
-    _achievements['building_tycoon'] = Achievement(
-      id: 'building_tycoon',
-      name: 'Magnat des Bâtiments',
-      description: 'Possédez 10 bâtiments de chaque type',
-      type: AchievementType.building,
-      requirements: {'buildingId': 'all', 'amount': BigInt.from(10)},
-      icon: Icons.business,
-      points: BigInt.from(100),
-    );
-
-    // Click achievements
-    _achievements['clicker'] = Achievement(
-      id: 'clicker',
-      name: 'Clicker',
-      description: 'Effectuez 100 clics',
-      type: AchievementType.click,
-      requirements: {'clicks': BigInt.from(100)},
-      icon: Icons.mouse,
-      points: BigInt.from(15),
-    );
-
-    _achievements['click_master'] = Achievement(
-      id: 'click_master',
-      name: 'Maître du Clic',
-      description: 'Effectuez 1000 clics',
-      type: AchievementType.click,
-      requirements: {'clicks': BigInt.from(1000)},
-      icon: Icons.mouse,
-      points: BigInt.from(75),
-    );
-
-    // Market achievements
-    _achievements['first_trade'] = Achievement(
-      id: 'first_trade',
-      name: 'Premier Échange',
-      description: 'Effectuez votre premier échange sur le marché',
-      type: AchievementType.market,
-      requirements: {'trades': BigInt.from(1)},
-      icon: Icons.shopping_cart,
-      points: BigInt.from(25),
-    );
-
-    _achievements['market_tycoon'] = Achievement(
-      id: 'market_tycoon',
-      name: 'Magnat du Marché',
-      description: 'Effectuez 100 échanges sur le marché',
-      type: AchievementType.market,
-      requirements: {'trades': BigInt.from(100)},
-      icon: Icons.shopping_cart,
-      points: BigInt.from(150),
-    );
-
-    // Time achievements
-    _achievements['first_hour'] = Achievement(
-      id: 'first_hour',
-      name: 'Première Heure',
-      description: 'Jouez pendant une heure',
-      type: AchievementType.time,
-      requirements: {'minutes': BigInt.from(60)},
-      icon: Icons.timer,
-      points: BigInt.from(30),
-    );
-
-    // Special achievements
-    _achievements['millionaire'] = Achievement(
-      id: 'millionaire',
-      name: 'Millionnaire',
-      description: 'Atteignez 1 million de dollars',
-      type: AchievementType.special,
-      requirements: {'resourceId': 'dollar', 'amount': BigInt.from(1000000)},
-      icon: Icons.attach_money,
-      points: BigInt.from(200),
-      isSecret: true,
-    );
+  Future<void> _initializeAchievements() async {
+    try {
+      // Charger le fichier game_data.json
+      final String jsonString = await rootBundle.loadString('assets/data/game_data.json');
+      final Map<String, dynamic> jsonData = json.decode(jsonString);
+      
+      // Vérifier si la section achievements existe
+      if (jsonData.containsKey('achievements') && jsonData['achievements'] is List) {
+        final achievementsList = jsonData['achievements'] as List;
+        
+        // Parcourir chaque achievement et l'ajouter à la map
+        for (final achievementJson in achievementsList) {
+          final achievement = Achievement.fromJson(achievementJson);
+          _achievements[achievement.id] = achievement;
+        }
+        
+        debugPrint('${_achievements.length} achievements chargés depuis game_data.json');
+      } else {
+        throw Exception('Aucune section achievements trouvée dans game_data.json');
+      }
+    } catch (e) {
+      debugPrint('Erreur lors du chargement des achievements: $e');
+      throw Exception('Erreur lors du chargement des achievements: $e');
+    }
+  }
+  
+  // ignore: unused_element
+  void _initializeDefaultAchievements() {
+    // Cette méthode ne doit plus être utilisée
+    throw Exception('Initialisation des achievements par défaut est désactivée');
   }
 
   void checkAchievements({
@@ -229,5 +169,9 @@ class AchievementManager extends ChangeNotifier {
     });
     _totalPoints = BigInt.parse(json['totalPoints'] as String);
     notifyListeners();
+  }
+
+  void _startListening() {
+    // Implementation of _startListening method
   }
 } 

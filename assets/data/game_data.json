@@ -131,5 +131,155 @@
         "effect": "UnlockCrafting"
       }
     }
+  ],
+  "achievements": [
+    {
+      "id": "first_wood",
+      "name": "Premier Bois",
+      "description": "Collectez votre premier bois",
+      "type": "resource",
+      "requirements": {
+        "resourceId": "wood",
+        "amount": "1"
+      },
+      "icon": "forest",
+      "points": "10",
+      "isUnlocked": false,
+      "isSecret": false
+    },
+    {
+      "id": "wood_master",
+      "name": "Maître du Bois",
+      "description": "Collectez 1000 bois",
+      "type": "resource",
+      "requirements": {
+        "resourceId": "wood",
+        "amount": "1000"
+      },
+      "icon": "forest",
+      "points": "50",
+      "isUnlocked": false,
+      "isSecret": false
+    },
+    {
+      "id": "first_building",
+      "name": "Premier Bâtiment",
+      "description": "Construisez votre premier bâtiment",
+      "type": "building",
+      "requirements": {
+        "buildingId": "any",
+        "amount": "1"
+      },
+      "icon": "business",
+      "points": "20",
+      "isUnlocked": false,
+      "isSecret": false
+    },
+    {
+      "id": "building_tycoon",
+      "name": "Magnat des Bâtiments",
+      "description": "Possédez 10 bâtiments de chaque type",
+      "type": "building",
+      "requirements": {
+        "buildingId": "all",
+        "amount": "10"
+      },
+      "icon": "business",
+      "points": "100",
+      "isUnlocked": false,
+      "isSecret": false
+    },
+    {
+      "id": "clicker",
+      "name": "Clicker",
+      "description": "Effectuez 100 clics",
+      "type": "click",
+      "requirements": {
+        "clicks": "100"
+      },
+      "icon": "mouse",
+      "points": "15",
+      "isUnlocked": false,
+      "isSecret": false
+    },
+    {
+      "id": "click_master",
+      "name": "Maître du Clic",
+      "description": "Effectuez 1000 clics",
+      "type": "click",
+      "requirements": {
+        "clicks": "1000"
+      },
+      "icon": "mouse",
+      "points": "75",
+      "isUnlocked": false,
+      "isSecret": false
+    },
+    {
+      "id": "first_trade",
+      "name": "Premier Échange",
+      "description": "Effectuez votre premier échange sur le marché",
+      "type": "market",
+      "requirements": {
+        "trades": "1"
+      },
+      "icon": "shopping_cart",
+      "points": "25",
+      "isUnlocked": false,
+      "isSecret": false
+    },
+    {
+      "id": "market_tycoon",
+      "name": "Magnat du Marché",
+      "description": "Effectuez 100 échanges sur le marché",
+      "type": "market",
+      "requirements": {
+        "trades": "100"
+      },
+      "icon": "shopping_cart",
+      "points": "150",
+      "isUnlocked": false,
+      "isSecret": false
+    },
+    {
+      "id": "first_hour",
+      "name": "Première Heure",
+      "description": "Jouez pendant une heure",
+      "type": "time",
+      "requirements": {
+        "minutes": "60"
+      },
+      "icon": "timer",
+      "points": "30",
+      "isUnlocked": false,
+      "isSecret": false
+    },
+    {
+      "id": "millionaire",
+      "name": "Millionnaire",
+      "description": "Atteignez 1 million de dollars",
+      "type": "special",
+      "requirements": {
+        "resourceId": "dollar",
+        "amount": "1000000"
+      },
+      "icon": "attach_money",
+      "points": "200",
+      "isUnlocked": false,
+      "isSecret": true
+    },
+    {
+      "id": "limit_order_master",
+      "name": "Maître des Ordres Limites",
+      "description": "Créez 10 ordres limites qui ont été exécutés avec succès",
+      "type": "market",
+      "requirements": {
+        "executed_orders": "10"
+      },
+      "icon": "trending_up",
+      "points": "100",
+      "isUnlocked": false,
+      "isSecret": false
+    }
   ]
 }

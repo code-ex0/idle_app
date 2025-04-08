@@ -1,41 +1,18 @@
 // lib/managers/building_manager.dart
 import 'package:test_1/interfaces/building_group.interface.dart';
 import 'package:test_1/interfaces/building.interface.dart';
-import 'package:test_1/interfaces/building.enum.dart';
+// Remove unused import
+// import 'package:test_1/interfaces/building.enum.dart';
 import 'package:test_1/managers/resource.manager.dart';
+import 'package:flutter/material.dart';
 
 class BuildingManager {
   final Map<String, Building> buildings = {};
   final Map<String, BuildingGroup> buildingGroups = {};
 
   BuildingManager() {
-    // Initialisation des bâtiments
-    buildings['sawmill'] = Building(
-      id: 'sawmill',
-      name: 'Scierie',
-      type: BuildingType.sawmill,
-      cost: {'wood': BigInt.from(10)},
-      production: {'wood': BigInt.from(1)},
-      durability: BigInt.from(100),
-      infiniteDurability: false,
-      amount: BigInt.zero,
-    );
-
-    buildings['quarry'] = Building(
-      id: 'quarry',
-      name: 'Carrière',
-      type: BuildingType.quarry,
-      cost: {'wood': BigInt.from(5)},
-      production: {'stone': BigInt.from(1)},
-      durability: BigInt.from(50),
-      infiniteDurability: false,
-      amount: BigInt.zero,
-    );
-
-    // Initialisation des groupes de bâtiments
-    for (var building in buildings.values) {
-      buildingGroups[building.id] = BuildingGroup(config: building);
-    }
+    // Le constructeur ne crée plus de données par défaut
+    // Les données doivent être chargées via initializeBuildings
   }
 
   void addBuilding(String buildingId) {
@@ -103,6 +80,10 @@ class BuildingManager {
   }
 
   void initializeBuildings(Map<String, Building> buildings) {
+    if (buildings.isEmpty) {
+      throw Exception('La liste de bâtiments ne peut pas être vide');
+    }
+    
     this.buildings.clear();
     this.buildings.addAll(buildings);
     
@@ -111,5 +92,7 @@ class BuildingManager {
     for (var building in buildings.values) {
       buildingGroups[building.id] = BuildingGroup(config: building);
     }
+    
+    debugPrint('${buildings.length} bâtiments initialisés');
   }
 }
