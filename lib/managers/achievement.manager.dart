@@ -6,6 +6,7 @@ import 'package:test_1/interfaces/achievement.enum.dart';
 import 'package:test_1/managers/resource.manager.dart';
 import 'package:test_1/managers/building.manager.dart';
 import 'dart:async';
+import 'package:test_1/services/game_state.service.dart';
 
 class AchievementManager extends ChangeNotifier {
   static final AchievementManager _instance = AchievementManager._internal();
@@ -76,6 +77,7 @@ class AchievementManager extends ChangeNotifier {
   void checkAchievements({
     required ResourceManager resourceManager,
     required BuildingManager buildingManager,
+    required GameState gameState,
     required BigInt totalClicks,
     required BigInt totalTrades,
     required BigInt minutesPlayed,
@@ -144,11 +146,12 @@ class AchievementManager extends ChangeNotifier {
             } else if (achievement.requirements.containsKey(
               'executed_orders',
             )) {
-              // final _requiredOrders =
-              // achievement.requirements['executed_orders'] as BigInt;
-              // Logique pour les ordres exécutés
-              // Comme nous n'avons pas accès à cette donnée, on ne débloque pas encore
-              isUnlocked = false;
+              final requiredOrders =
+                  achievement.requirements['executed_orders'] as BigInt;
+              final executedOrders =
+                  gameState.statistics['market']?['executed_orders'] ??
+                  BigInt.zero;
+              isUnlocked = executedOrders >= requiredOrders;
             }
             break;
 
