@@ -58,7 +58,9 @@ class GameState extends ChangeNotifier {
     _saveTimer = Timer.periodic(const Duration(minutes: 5), (timer) {
       saveGame();
     });
-    _achievementCheckTimer = Timer.periodic(const Duration(seconds: 5), (timer) {
+    _achievementCheckTimer = Timer.periodic(const Duration(seconds: 5), (
+      timer,
+    ) {
       _checkAchievements();
     });
   }
@@ -74,6 +76,7 @@ class GameState extends ChangeNotifier {
       totalClicks: totalClicks,
       totalTrades: totalTrades,
       minutesPlayed: minutesPlayed,
+      gameState: this,
     );
   }
 
@@ -85,7 +88,11 @@ class GameState extends ChangeNotifier {
     }
   }
 
-  void sellResource(String resourceId, BigInt quantity, [double? specificPrice]) {
+  void sellResource(
+    String resourceId,
+    BigInt quantity, [
+    double? specificPrice,
+  ]) {
     final resource = resourceManager.resources[resourceId];
     if (resource == null || resource.amount < quantity) return;
 
@@ -102,7 +109,11 @@ class GameState extends ChangeNotifier {
     notifyListeners();
   }
 
-  void buyResource(String resourceId, BigInt quantity, [double? specificPrice]) {
+  void buyResource(
+    String resourceId,
+    BigInt quantity, [
+    double? specificPrice,
+  ]) {
     final resource = resourceManager.resources[resourceId];
     final currency = resourceManager.resources['dollar'];
     if (resource == null || currency == null) return;
@@ -122,7 +133,8 @@ class GameState extends ChangeNotifier {
     final categoryStats = statistics[category];
     if (categoryStats == null) return;
 
-    categoryStats[resourceId] = (categoryStats[resourceId] ?? BigInt.zero) + amount;
+    categoryStats[resourceId] =
+        (categoryStats[resourceId] ?? BigInt.zero) + amount;
   }
 
   void _checkGameWin() {
@@ -148,7 +160,9 @@ class GameState extends ChangeNotifier {
         // Par exemple, en ajoutant un multiplicateur temporaire dans le BuildingManager
         // Pour simplifier, nous augmentons temporairement la production des ressources
         resourceManager.resources.forEach((id, resource) {
-          resource.value = BigInt.from((resource.value.toDouble() * event.multiplier).round());
+          resource.value = BigInt.from(
+            (resource.value.toDouble() * event.multiplier).round(),
+          );
         });
         break;
       case EventType.marketVolatility:
@@ -157,15 +171,17 @@ class GameState extends ChangeNotifier {
       case EventType.resourceBonus:
         // Apply resource bonus multiplier to all resources
         resourceManager.resources.forEach((id, resource) {
-          resource.value = BigInt.from((resource.value.toDouble() * event.multiplier).round());
+          resource.value = BigInt.from(
+            (resource.value.toDouble() * event.multiplier).round(),
+          );
         });
         break;
       case EventType.buildingDiscount:
         // Apply building cost discount
         final discountMultiplier = BigInt.from(event.multiplier.round());
         buildingManager.buildings.forEach((id, building) {
-          building.cost = building.cost.map((key, value) => 
-            MapEntry(key, value ~/ discountMultiplier)
+          building.cost = building.cost.map(
+            (key, value) => MapEntry(key, value ~/ discountMultiplier),
           );
         });
         break;
@@ -174,10 +190,13 @@ class GameState extends ChangeNotifier {
 
   Future<void> saveGame() async {
     try {
-
       final saveData = {
-        'resources': resourceManager.resources.map((key, value) => MapEntry(key, value.toJson())),
-        'buildings': buildingManager.buildings.map((key, value) => MapEntry(key, value.toJson())),
+        'resources': resourceManager.resources.map(
+          (key, value) => MapEntry(key, value.toJson()),
+        ),
+        'buildings': buildingManager.buildings.map(
+          (key, value) => MapEntry(key, value.toJson()),
+        ),
         'statistics': statistics.map(
           (category, values) => MapEntry(
             category,
@@ -207,13 +226,15 @@ class GameState extends ChangeNotifier {
       if (json.isEmpty) {
         throw Exception('Aucune donnée de sauvegarde trouvée');
       }
-      
+
       // Vérifier que toutes les sections requises existent
-      if (!json.containsKey('resources') || !json.containsKey('buildings') || 
-          !json.containsKey('statistics') || !json.containsKey('achievements')) {
+      if (!json.containsKey('resources') ||
+          !json.containsKey('buildings') ||
+          !json.containsKey('statistics') ||
+          !json.containsKey('achievements')) {
         throw Exception('Les données de sauvegarde sont incomplètes');
       }
-      
+
       // Load resources
       final resourcesJson = json['resources'] as Map<String, dynamic>;
       resourcesJson.forEach((key, value) {
@@ -222,7 +243,9 @@ class GameState extends ChangeNotifier {
           resource.amount = BigInt.parse(value['amount'] as String);
           resource.isUnlocked = value['isUnlocked'] as bool;
         } else {
-          throw Exception('Ressource inconnue dans les données de sauvegarde: $key');
+          throw Exception(
+            'Ressource inconnue dans les données de sauvegarde: $key',
+          );
         }
       });
 
@@ -232,9 +255,13 @@ class GameState extends ChangeNotifier {
         final building = buildingManager.buildings[key];
         if (building != null) {
           building.amount = BigInt.parse(value['amount'] as String);
-          building.currentDurability = BigInt.parse(value['currentDurability'] as String);
+          building.currentDurability = BigInt.parse(
+            value['currentDurability'] as String,
+          );
         } else {
-          throw Exception('Bâtiment inconnu dans les données de sauvegarde: $key');
+          throw Exception(
+            'Bâtiment inconnu dans les données de sauvegarde: $key',
+          );
         }
       });
 
@@ -251,7 +278,9 @@ class GameState extends ChangeNotifier {
 
       // Load achievements
       try {
-        achievementManager.fromJson(json['achievements'] as Map<String, dynamic>);
+        achievementManager.fromJson(
+          json['achievements'] as Map<String, dynamic>,
+        );
       } catch (e) {
         throw Exception('Erreur lors du chargement des succès: $e');
       }
@@ -283,7 +312,10 @@ class GameState extends ChangeNotifier {
 
   void buyBuildingMax(String buildingId) {
     try {
-      final maxPossible = buildingManager.calculateMaxBuy(buildingId, resourceManager);
+      final maxPossible = buildingManager.calculateMaxBuy(
+        buildingId,
+        resourceManager,
+      );
       if (maxPossible > BigInt.zero) {
         buildingManager.buyBuildings(buildingId, maxPossible, resourceManager);
         _updateStatistics('buildings', buildingId, maxPossible);
@@ -337,8 +369,11 @@ class GameState extends ChangeNotifier {
       final Map<String, dynamic> jsonData = jsonDecode(jsonString);
 
       // Vérifier que toutes les sections requises existent
-      if (!jsonData.containsKey('resources') || !jsonData.containsKey('buildings')) {
-        throw Exception('Le fichier game_data.json est incomplet. Les sections resources et buildings sont requises.');
+      if (!jsonData.containsKey('resources') ||
+          !jsonData.containsKey('buildings')) {
+        throw Exception(
+          'Le fichier game_data.json est incomplet. Les sections resources et buildings sont requises.',
+        );
       }
 
       final List<dynamic> resourcesData = jsonData['resources'];
@@ -400,40 +435,40 @@ class GameState extends ChangeNotifier {
   void _executeReadyLimitOrders() {
     bool anyOrderExecuted = false;
     final executedOrderIds = <String, List<String>>{};
-    
+
     // Pour chaque ressource, vérifier s'il y a des ordres prêts à exécuter
     for (final resourceId in marketManager.prices.keys) {
       final readyOrders = marketManager.getReadyLimitOrders(resourceId);
       if (readyOrders.isEmpty) continue;
       executedOrderIds[resourceId] = [];
-      
+
       for (final order in readyOrders) {
         if (order.executionPrice == null) {
           continue;
         }
-        
-        
+
         if (order.type == OrderType.buy) {
           // Pour un ordre d'achat, vérifier si le joueur a assez d'argent
           final currency = resourceManager.resources['dollar'];
           if (currency == null) {
             continue;
           }
-          
-          final totalCost = (order.executionPrice! * order.quantity.toDouble()).toInt();          
+
+          final totalCost =
+              (order.executionPrice! * order.quantity.toDouble()).toInt();
           if (currency.amount >= BigInt.from(totalCost)) {
             // Exécuter l'ordre d'achat
             final resource = resourceManager.resources[resourceId];
             if (resource == null) {
               continue;
             }
-            
+
             // Déduire le coût
             currency.amount -= BigInt.from(totalCost);
-            
+
             // Ajouter les ressources
             resource.amount += order.quantity;
-                        
+
             // Enregistrer la transaction
             marketManager.addTransaction(
               resourceId,
@@ -444,19 +479,24 @@ class GameState extends ChangeNotifier {
                 isBuy: true,
               ),
             );
-            
+
             // Marquer l'ordre comme exécuté
             order.markAsExecuted(order.executionPrice!);
             anyOrderExecuted = true;
-            
+
             // Ajouter à l'historique des ordres exécutés
             marketManager.addExecutedLimitOrder(resourceId, order);
 
             // Ajouter l'ID à la liste des ordres exécutés
             executedOrderIds[resourceId]!.add(order.id);
-            
+
             // Mettre à jour les statistiques
             _updateStatistics('market', resourceId, order.quantity);
+
+            // Incrémenter le compteur d'ordres exécutés
+            statistics['market']?['executed_orders'] =
+                (statistics['market']?['executed_orders'] ?? BigInt.zero) +
+                BigInt.one;
           }
         } else if (order.type == OrderType.sell) {
           // Pour un ordre de vente, vérifier si le joueur a assez de ressources
@@ -464,19 +504,20 @@ class GameState extends ChangeNotifier {
           if (resource == null || resource.amount < order.quantity) {
             continue;
           }
-          
+
           // Déduire les ressources
           resource.amount -= order.quantity;
-          
+
           // Ajouter les gains
           final currency = resourceManager.resources['dollar'];
           if (currency == null) {
             continue;
           }
-          
-          final revenue = (order.executionPrice! * order.quantity.toDouble()).toInt();
+
+          final revenue =
+              (order.executionPrice! * order.quantity.toDouble()).toInt();
           currency.amount += BigInt.from(revenue);
-                    
+
           // Enregistrer la transaction
           marketManager.addTransaction(
             resourceId,
@@ -487,41 +528,54 @@ class GameState extends ChangeNotifier {
               isBuy: false,
             ),
           );
-          
+
           // Marquer l'ordre comme exécuté
           order.markAsExecuted(order.executionPrice!);
           anyOrderExecuted = true;
-          
+
           // Ajouter à l'historique des ordres exécutés
           marketManager.addExecutedLimitOrder(resourceId, order);
-          
+
           // Ajouter l'ID à la liste des ordres exécutés
           executedOrderIds[resourceId]!.add(order.id);
-          
+
           // Mettre à jour les statistiques
           _updateStatistics('market', resourceId, order.quantity);
+
+          // Incrémenter le compteur d'ordres exécutés
+          statistics['market']?['executed_orders'] =
+              (statistics['market']?['executed_orders'] ?? BigInt.zero) +
+              BigInt.one;
+
           _checkGameWin();
         }
       }
     }
-    
+
     // Supprimer les ordres exécutés de la liste principale
     for (final resourceId in executedOrderIds.keys) {
       if (executedOrderIds[resourceId]!.isNotEmpty) {
-        marketManager.removeExecutedOrders(resourceId, executedOrderIds[resourceId]!);
+        marketManager.removeExecutedOrders(
+          resourceId,
+          executedOrderIds[resourceId]!,
+        );
       }
     }
-    
+
     // Notifier les écouteurs seulement si au moins un ordre a été exécuté
     if (anyOrderExecuted) {
       notifyListeners();
     }
   }
-  
+
   /// Crée un ordre limite d'achat
-  bool createBuyLimitOrder(String resourceId, BigInt quantity, double targetPrice) {
+  bool createBuyLimitOrder(
+    String resourceId,
+    BigInt quantity,
+    double targetPrice,
+  ) {
     if (quantity <= BigInt.zero) return false;
-    
+
     final orderId = DateTime.now().millisecondsSinceEpoch.toString();
     final order = LimitOrder(
       id: orderId,
@@ -531,19 +585,23 @@ class GameState extends ChangeNotifier {
       targetPrice: targetPrice,
       createdAt: DateTime.now(),
     );
-    
+
     marketManager.addLimitOrder(resourceId, order);
     return true;
   }
-  
+
   /// Crée un ordre limite de vente
-  bool createSellLimitOrder(String resourceId, BigInt quantity, double targetPrice) {
+  bool createSellLimitOrder(
+    String resourceId,
+    BigInt quantity,
+    double targetPrice,
+  ) {
     if (quantity <= BigInt.zero) return false;
-    
+
     // Vérifier si le joueur a assez de ressources
     final resource = resourceManager.resources[resourceId];
     if (resource == null || resource.amount < quantity) return false;
-    
+
     final orderId = DateTime.now().millisecondsSinceEpoch.toString();
     final order = LimitOrder(
       id: orderId,
@@ -553,16 +611,16 @@ class GameState extends ChangeNotifier {
       targetPrice: targetPrice,
       createdAt: DateTime.now(),
     );
-    
+
     marketManager.addLimitOrder(resourceId, order);
     return true;
   }
-  
+
   /// Annule un ordre limite
   bool cancelLimitOrder(String resourceId, String orderId) {
     return marketManager.cancelLimitOrder(resourceId, orderId);
   }
-  
+
   /// Récupère tous les ordres limites pour une ressource
   List<LimitOrder> getLimitOrders(String resourceId) {
     return marketManager.getLimitOrders(resourceId);
@@ -580,26 +638,33 @@ class GameState extends ChangeNotifier {
     // Utiliser la valeur actuelle de la ressource comme point de départ
     final resource = resourceManager.resources[resourceId];
     if (resource == null) return List.generate(count, (_) => 1.0);
-    
+
     final baseValue = resource.value.toDouble();
     final result = <double>[];
-    
+
     // Paramètres de volatilité pour rendre l'historique réaliste
-    final volatility = 0.05; // 5% de volatilité 
-    final trend = 0.001 * (math.Random().nextDouble() * 2 - 1); // tendance légère à la hausse ou à la baisse
-    
-    double currentValue = baseValue * 0.7; // commencer avec une valeur plus basse que l'actuelle
-    
+    final volatility = 0.05; // 5% de volatilité
+    final trend =
+        0.001 *
+        (math.Random().nextDouble() * 2 -
+            1); // tendance légère à la hausse ou à la baisse
+
+    double currentValue =
+        baseValue * 0.7; // commencer avec une valeur plus basse que l'actuelle
+
     for (int i = 0; i < count; i++) {
       // Ajouter un bruit aléatoire
       final change = (math.Random().nextDouble() * 2 - 1) * volatility;
       // Ajouter une tendance
       currentValue = currentValue * (1 + change + trend);
       // Limiter les variations extrêmes
-      currentValue = math.max(baseValue * 0.5, math.min(baseValue * 1.5, currentValue));
+      currentValue = math.max(
+        baseValue * 0.5,
+        math.min(baseValue * 1.5, currentValue),
+      );
       result.add(currentValue);
     }
-    
+
     return result;
   }
 
