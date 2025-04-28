@@ -7,7 +7,6 @@ import 'package:test_1/managers/resource.manager.dart';
 import 'package:test_1/managers/building.manager.dart';
 import 'dart:async';
 
-
 class AchievementManager extends ChangeNotifier {
   static final AchievementManager _instance = AchievementManager._internal();
   final Map<String, Achievement> _achievements = {};
@@ -22,8 +21,10 @@ class AchievementManager extends ChangeNotifier {
   Map<String, Achievement> get achievements => _achievements;
   BigInt get totalPoints => _totalPoints;
 
-  Stream<Achievement> get achievementUnlockStream => _achievementStreamController.stream;
-  final _achievementStreamController = StreamController<Achievement>.broadcast();
+  Stream<Achievement> get achievementUnlockStream =>
+      _achievementStreamController.stream;
+  final _achievementStreamController =
+      StreamController<Achievement>.broadcast();
 
   Future<void> initialize() async {
     await _initializeAchievements();
@@ -34,33 +35,42 @@ class AchievementManager extends ChangeNotifier {
   Future<void> _initializeAchievements() async {
     try {
       // Charger le fichier game_data.json
-      final String jsonString = await rootBundle.loadString('assets/data/game_data.json');
+      final String jsonString = await rootBundle.loadString(
+        'assets/data/game_data.json',
+      );
       final Map<String, dynamic> jsonData = json.decode(jsonString);
-      
+
       // Vérifier si la section achievements existe
-      if (jsonData.containsKey('achievements') && jsonData['achievements'] is List) {
+      if (jsonData.containsKey('achievements') &&
+          jsonData['achievements'] is List) {
         final achievementsList = jsonData['achievements'] as List;
-        
+
         // Parcourir chaque achievement et l'ajouter à la map
         for (final achievementJson in achievementsList) {
           final achievement = Achievement.fromJson(achievementJson);
           _achievements[achievement.id] = achievement;
         }
-        
-        debugPrint('${_achievements.length} achievements chargés depuis game_data.json');
+
+        debugPrint(
+          '${_achievements.length} achievements chargés depuis game_data.json',
+        );
       } else {
-        throw Exception('Aucune section achievements trouvée dans game_data.json');
+        throw Exception(
+          'Aucune section achievements trouvée dans game_data.json',
+        );
       }
     } catch (e) {
       debugPrint('Erreur lors du chargement des achievements: $e');
       throw Exception('Erreur lors du chargement des achievements: $e');
     }
   }
-  
+
   // ignore: unused_element
   void _initializeDefaultAchievements() {
     // Cette méthode ne doit plus être utilisée
-    throw Exception('Initialisation des achievements par défaut est désactivée');
+    throw Exception(
+      'Initialisation des achievements par défaut est désactivée',
+    );
   }
 
   void checkAchievements({
@@ -77,56 +87,101 @@ class AchievementManager extends ChangeNotifier {
 
       bool isUnlocked = false;
 
-      switch (achievement.type) {
-        case AchievementType.resource:
-          final resourceId = achievement.requirements['resourceId'] as String;
-          final requiredAmount = achievement.requirements['amount'] as BigInt;
-          final resource = resourceManager.resources[resourceId];
-          
-          if (resource != null && resource.amount >= requiredAmount) {
-            isUnlocked = true;
-          }
-          break;
+      try {
+        switch (achievement.type) {
+          case AchievementType.resource:
+            if (achievement.requirements.containsKey('resourceId') &&
+                achievement.requirements.containsKey('amount')) {
+              final resourceId =
+                  achievement.requirements['resourceId'] as String;
+              final requiredAmount =
+                  achievement.requirements['amount'] as BigInt;
+              final resource = resourceManager.resources[resourceId];
 
-        case AchievementType.building:
-          final buildingId = achievement.requirements['buildingId'] as String;
-          final requiredAmount = achievement.requirements['amount'] as BigInt;
-          
-          if (buildingId == 'any') {
-            isUnlocked = buildingManager.buildings.values.any((b) => b.amount >= requiredAmount);
-          } else if (buildingId == 'all') {
-            isUnlocked = buildingManager.buildings.values.every((b) => b.amount >= requiredAmount);
-          } else {
-            final building = buildingManager.buildings[buildingId];
-            isUnlocked = building != null && building.amount >= requiredAmount;
-          }
-          break;
+              if (resource != null && resource.amount >= requiredAmount) {
+                isUnlocked = true;
+              }
+            }
+            break;
 
-        case AchievementType.click:
-          final requiredClicks = achievement.requirements['clicks'] as BigInt;
-          isUnlocked = totalClicks >= requiredClicks;
-          break;
+          case AchievementType.building:
+            if (achievement.requirements.containsKey('buildingId') &&
+                achievement.requirements.containsKey('amount')) {
+              final buildingId =
+                  achievement.requirements['buildingId'] as String;
+              final requiredAmount =
+                  achievement.requirements['amount'] as BigInt;
 
-        case AchievementType.market:
-          final requiredTrades = achievement.requirements['trades'] as BigInt;
-          isUnlocked = totalTrades >= requiredTrades;
-          break;
+              if (buildingId == 'any') {
+                isUnlocked = buildingManager.buildings.values.any(
+                  (b) => b.amount >= requiredAmount,
+                );
+              } else if (buildingId == 'all') {
+                isUnlocked = buildingManager.buildings.values.every(
+                  (b) => b.amount >= requiredAmount,
+                );
+              } else {
+                final building = buildingManager.buildings[buildingId];
+                isUnlocked =
+                    building != null && building.amount >= requiredAmount;
+              }
+            }
+            break;
 
-        case AchievementType.time:
-          final requiredMinutes = achievement.requirements['minutes'] as BigInt;
-          isUnlocked = minutesPlayed >= requiredMinutes;
-          break;
+          case AchievementType.click:
+            if (achievement.requirements.containsKey('clicks')) {
+              final requiredClicks =
+                  achievement.requirements['clicks'] as BigInt;
+              isUnlocked = totalClicks >= requiredClicks;
+            }
+            break;
 
-        case AchievementType.special:
-          // Special achievements can have custom logic
-          final resourceId = achievement.requirements['resourceId'] as String;
-          final requiredAmount = achievement.requirements['amount'] as BigInt;
-          final resource = resourceManager.resources[resourceId];
-          
-          if (resource != null && resource.amount >= requiredAmount) {
-            isUnlocked = true;
-          }
-          break;
+          case AchievementType.market:
+            if (achievement.requirements.containsKey('trades')) {
+              final requiredTrades =
+                  achievement.requirements['trades'] as BigInt;
+              isUnlocked = totalTrades >= requiredTrades;
+            } else if (achievement.requirements.containsKey(
+              'executed_orders',
+            )) {
+              // final _requiredOrders =
+              // achievement.requirements['executed_orders'] as BigInt;
+              // Logique pour les ordres exécutés
+              // Comme nous n'avons pas accès à cette donnée, on ne débloque pas encore
+              isUnlocked = false;
+            }
+            break;
+
+          case AchievementType.time:
+            if (achievement.requirements.containsKey('minutes')) {
+              final requiredMinutes =
+                  achievement.requirements['minutes'] as BigInt;
+              isUnlocked = minutesPlayed >= requiredMinutes;
+            }
+            break;
+
+          case AchievementType.special:
+            // Special achievements can have custom logic
+            if (achievement.requirements.containsKey('resourceId') &&
+                achievement.requirements.containsKey('amount')) {
+              final resourceId =
+                  achievement.requirements['resourceId'] as String;
+              final requiredAmount =
+                  achievement.requirements['amount'] as BigInt;
+              final resource = resourceManager.resources[resourceId];
+
+              if (resource != null && resource.amount >= requiredAmount) {
+                isUnlocked = true;
+              }
+            }
+            break;
+        }
+      } catch (e) {
+        debugPrint(
+          'Erreur lors de la vérification du succès ${achievement.id}: $e',
+        );
+        // Continuer avec le prochain achievement
+        continue;
       }
 
       if (isUnlocked) {
@@ -147,7 +202,9 @@ class AchievementManager extends ChangeNotifier {
   }
 
   List<Achievement> getLockedAchievements() {
-    return _achievements.values.where((a) => !a.isUnlocked && !a.isSecret).toList();
+    return _achievements.values
+        .where((a) => !a.isUnlocked && !a.isSecret)
+        .toList();
   }
 
   List<Achievement> getSecretAchievements() {
@@ -156,7 +213,9 @@ class AchievementManager extends ChangeNotifier {
 
   Map<String, dynamic> toJson() {
     return {
-      'achievements': _achievements.map((key, value) => MapEntry(key, value.toJson())),
+      'achievements': _achievements.map(
+        (key, value) => MapEntry(key, value.toJson()),
+      ),
       'totalPoints': _totalPoints.toString(),
     };
   }
@@ -174,4 +233,4 @@ class AchievementManager extends ChangeNotifier {
   void _startListening() {
     // Implementation of _startListening method
   }
-} 
+}
