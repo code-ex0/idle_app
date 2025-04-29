@@ -37,6 +37,7 @@ dependencies:
   provider: ^6.1.2
   fl_chart: ^0.70.2
   intl: ^0.20.2
+  shared_preferences: ^2.2.2
 
 dev_dependencies:
   flutter_test:
@@ -95,3 +96,4 @@ flutter:
     - assets/img/
     - assets/icon/resources/
     - assets/data/game_data.json
+    - assets/data/

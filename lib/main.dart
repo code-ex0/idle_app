@@ -2,17 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:test_1/services/game_state.service.dart';
 import 'package:test_1/pages/home.page.dart';
-
-void main() async {
-  WidgetsFlutterBinding.ensureInitialized();
-  final gameState = await GameState.loadGameState();
-  runApp(
-    ChangeNotifierProvider.value(
-      value: gameState,
-      child: const MyApp(),
-    ),
-  );
-}
+import 'package:test_1/services/save_manager.service.dart';
 
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
@@ -48,10 +38,26 @@ class MyApp extends StatelessWidget {
           ),
         ),
         textTheme: const TextTheme(
-          displayLarge: TextStyle(fontFamily: 'Poppins', fontSize: 28, fontWeight: FontWeight.bold),
-          displayMedium: TextStyle(fontFamily: 'Poppins', fontSize: 24, fontWeight: FontWeight.bold),
-          displaySmall: TextStyle(fontFamily: 'Poppins', fontSize: 20, fontWeight: FontWeight.bold),
-          headlineMedium: TextStyle(fontFamily: 'Poppins', fontSize: 18, fontWeight: FontWeight.w600),
+          displayLarge: TextStyle(
+            fontFamily: 'Poppins',
+            fontSize: 28,
+            fontWeight: FontWeight.bold,
+          ),
+          displayMedium: TextStyle(
+            fontFamily: 'Poppins',
+            fontSize: 24,
+            fontWeight: FontWeight.bold,
+          ),
+          displaySmall: TextStyle(
+            fontFamily: 'Poppins',
+            fontSize: 20,
+            fontWeight: FontWeight.bold,
+          ),
+          headlineMedium: TextStyle(
+            fontFamily: 'Poppins',
+            fontSize: 18,
+            fontWeight: FontWeight.w600,
+          ),
           bodyLarge: TextStyle(fontFamily: 'Poppins', fontSize: 16),
           bodyMedium: TextStyle(fontFamily: 'Poppins', fontSize: 14),
         ),
@@ -121,12 +127,40 @@ class MyApp extends StatelessWidget {
           ),
         ),
         textTheme: const TextTheme(
-          displayLarge: TextStyle(fontFamily: 'Poppins', fontSize: 28, fontWeight: FontWeight.bold, color: Color(0xFFE9EDF0)),
-          displayMedium: TextStyle(fontFamily: 'Poppins', fontSize: 24, fontWeight: FontWeight.bold, color: Color(0xFFE9EDF0)),
-          displaySmall: TextStyle(fontFamily: 'Poppins', fontSize: 20, fontWeight: FontWeight.bold, color: Color(0xFFE9EDF0)),
-          headlineMedium: TextStyle(fontFamily: 'Poppins', fontSize: 18, fontWeight: FontWeight.w600, color: Color(0xFFE9EDF0)),
-          bodyLarge: TextStyle(fontFamily: 'Poppins', fontSize: 16, color: Color(0xFFE9EDF0)),
-          bodyMedium: TextStyle(fontFamily: 'Poppins', fontSize: 14, color: Color(0xFFE9EDF0)),
+          displayLarge: TextStyle(
+            fontFamily: 'Poppins',
+            fontSize: 28,
+            fontWeight: FontWeight.bold,
+            color: Color(0xFFE9EDF0),
+          ),
+          displayMedium: TextStyle(
+            fontFamily: 'Poppins',
+            fontSize: 24,
+            fontWeight: FontWeight.bold,
+            color: Color(0xFFE9EDF0),
+          ),
+          displaySmall: TextStyle(
+            fontFamily: 'Poppins',
+            fontSize: 20,
+            fontWeight: FontWeight.bold,
+            color: Color(0xFFE9EDF0),
+          ),
+          headlineMedium: TextStyle(
+            fontFamily: 'Poppins',
+            fontSize: 18,
+            fontWeight: FontWeight.w600,
+            color: Color(0xFFE9EDF0),
+          ),
+          bodyLarge: TextStyle(
+            fontFamily: 'Poppins',
+            fontSize: 16,
+            color: Color(0xFFE9EDF0),
+          ),
+          bodyMedium: TextStyle(
+            fontFamily: 'Poppins',
+            fontSize: 14,
+            color: Color(0xFFE9EDF0),
+          ),
         ),
         cardTheme: CardTheme(
           elevation: 3,
@@ -172,4 +206,40 @@ class MyApp extends StatelessWidget {
       home: const HomeScreen(),
     );
   }
+}
+
+class AppLifecycleObserver extends WidgetsBindingObserver {
+  final GameState gameState;
+
+  AppLifecycleObserver(this.gameState);
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.paused ||
+        state == AppLifecycleState.detached) {
+      gameState.saveGame(force: true);
+    }
+  }
+}
+
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+
+  // Charger le GameState (qui gère déjà le chargement de la sauvegarde)
+  final gameState = await GameState.loadGameState();
+
+  // Vérifier si une sauvegarde existe et la charger
+  final hasSave = await SaveManager.hasSave();
+  if (hasSave) {
+    debugPrint('Sauvegarde trouvée, chargement...');
+    await gameState.loadGame();
+  } else {
+    debugPrint('Aucune sauvegarde trouvée, démarrage avec données initiales');
+  }
+
+  // Ajouter l'observateur du cycle de vie
+  final observer = AppLifecycleObserver(gameState);
+  WidgetsBinding.instance.addObserver(observer);
+
+  runApp(ChangeNotifierProvider.value(value: gameState, child: const MyApp()));
 }

@@ -48,12 +48,12 @@ class Building {
   Map<String, dynamic> toJson() => {
     'id': id,
     'name': name,
-    'cost': cost.map((key, value) => MapEntry(key, value.toString())),
-    'production': production.map((key, value) => MapEntry(key, value.toString())),
-    'durability': durability.toString(),
-    'type': type.toString().split('.').last,
     'amount': amount.toString(),
     'currentDurability': currentDurability.toString(),
+    'durability': durability.toString(),
+    'cost': cost.map((k, v) => MapEntry(k, v.toString())),
+    'production': production.map((k, v) => MapEntry(k, v.toString())),
+    'type': type.toString().split('.').last,
     'infiniteDurability': infiniteDurability,
   };
 }

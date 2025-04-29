@@ -6,7 +6,7 @@ class MarketManager {
   final Map<String, double> prices = {};
 
   /// Historique des prix par ressource.
-  final Map<String, List<double>> _priceHistory = {};
+  Map<String, List<double>> _priceHistory = {};
 
   /// Le coefficient de volatilité pour les variations de prix.
   double volatility;
@@ -15,7 +15,7 @@ class MarketManager {
 
   final Map<String, List<MarketTransaction>> _transactions = {};
   final Map<String, List<LimitOrder>> _limitOrders = {};
-  final Map<String, List<LimitOrder>> _executedLimitOrders = {};
+  Map<String, List<LimitOrder>> _executedLimitOrders = {};
 
   final int _maxHistorySize = 100;
 
@@ -186,6 +186,20 @@ class MarketManager {
     if (orders == null || orders.isEmpty) return;
     _limitOrders[resourceId] =
         orders.where((order) => !orderIds.contains(order.id)).toList();
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'executedOrders': _executedLimitOrders,
+      'priceHistory': _priceHistory,
+    };
+  }
+
+  void fromJson(Map<String, dynamic> json) {
+    _executedLimitOrders = Map<String, List<LimitOrder>>.from(
+      json['executedOrders'] ?? {},
+    );
+    _priceHistory = Map<String, List<double>>.from(json['priceHistory'] ?? {});
   }
 }
 
