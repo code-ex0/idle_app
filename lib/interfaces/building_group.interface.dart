@@ -6,11 +6,10 @@ class BuildingGroup {
   List<BigInt> listDurabilitys;
   BigInt currentDurability;
 
-  BuildingGroup({
-    required this.config,
-  }) : count = BigInt.zero,
-       listDurabilitys = [],
-       currentDurability = config.durability;
+  BuildingGroup({required this.config})
+    : count = BigInt.zero,
+      listDurabilitys = [],
+      currentDurability = config.durability;
 
   void addUnit() {
     count += BigInt.one;
@@ -19,7 +18,7 @@ class BuildingGroup {
 
   void addUnits(BigInt amount) {
     if (amount <= BigInt.zero) return;
-    
+
     for (BigInt i = BigInt.zero; i < amount; i += BigInt.one) {
       addUnit();
     }
@@ -48,5 +47,23 @@ class BuildingGroup {
   BigInt get lowestDurability {
     if (listDurabilitys.isEmpty) return BigInt.zero;
     return listDurabilitys.reduce((a, b) => a < b ? a : b);
+  }
+
+  Map<String, dynamic> toJson() => {
+    'config': config.toJson(),
+    'count': count.toString(),
+    'listDurabilitys': listDurabilitys.map((d) => d.toString()).toList(),
+    'currentDurability': currentDurability.toString(),
+  };
+
+  factory BuildingGroup.fromJson(Map<String, dynamic> json, Building config) {
+    final group = BuildingGroup(config: config);
+    group.count = BigInt.parse(json['count'] as String);
+    group.listDurabilitys =
+        (json['listDurabilitys'] as List)
+            .map((d) => BigInt.parse(d as String))
+            .toList();
+    group.currentDurability = BigInt.parse(json['currentDurability'] as String);
+    return group;
   }
 }

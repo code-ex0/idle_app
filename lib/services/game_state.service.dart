@@ -11,13 +11,15 @@ import 'package:test_1/managers/market.manager.dart';
 import 'package:test_1/managers/resource.manager.dart';
 import 'package:test_1/managers/achievement.manager.dart';
 import 'package:test_1/managers/event.manager.dart';
+import 'package:test_1/services/save_manager.service.dart';
 
 class GameState extends ChangeNotifier {
   final ResourceManager resourceManager;
   final BuildingManager buildingManager;
-  final MarketManager marketManager;
   final AchievementManager achievementManager;
+  final MarketManager marketManager;
   final EventManager eventManager;
+  final Map<String, dynamic> gameData;
 
   Timer? _timer;
   Timer? _tradingTimer;
@@ -44,6 +46,7 @@ class GameState extends ChangeNotifier {
     required this.achievementManager,
     required this.marketManager,
     required this.eventManager,
+    required this.gameData,
   }) {
     _initializeTimers();
   }
@@ -55,8 +58,8 @@ class GameState extends ChangeNotifier {
     _tradingTimer = Timer.periodic(const Duration(seconds: 5), (timer) {
       trade();
     });
-    _saveTimer = Timer.periodic(const Duration(minutes: 5), (timer) {
-      saveGame();
+    _saveTimer = Timer.periodic(const Duration(seconds: 5), (timer) {
+      saveGame(force: true);
     });
     _achievementCheckTimer = Timer.periodic(const Duration(seconds: 5), (
       timer,
@@ -188,109 +191,55 @@ class GameState extends ChangeNotifier {
     }
   }
 
-  Future<void> saveGame() async {
+  Future<void> saveGame({bool force = false}) async {
     try {
-      final saveData = {
-        'resources': resourceManager.resources.map(
-          (key, value) => MapEntry(key, value.toJson()),
-        ),
-        'buildings': buildingManager.buildings.map(
-          (key, value) => MapEntry(key, value.toJson()),
-        ),
-        'statistics': statistics.map(
-          (category, values) => MapEntry(
-            category,
-            values.map((key, value) => MapEntry(key, value.toString())),
-          ),
-        ),
-        'achievements': achievementManager.toJson(),
-        'timestamp': DateTime.now().toIso8601String(),
-        'isGameWon': isGameWon,
-      };
-      saveData.forEach((key, value) {
-        debugPrint('$key: $value');
-      });
-
-      // Implement actual save logic - TODO in production code
-      // Don't create unused variables
-      // final jsonString = jsonEncode(saveData);
+      await SaveManager.saveGame(this, force: force);
+      debugPrint('Jeu sauvegardé avec succès');
     } catch (e) {
-      _handleError(e);
+      debugPrint('Erreur lors de la sauvegarde: $e');
+    }
+  }
+
+  /// Convertit les statistiques du format JSON vers BigInt
+  void _loadStatistics(Map<String, dynamic> json) {
+    if (json.containsKey('statistics')) {
+      final statsJson = json['statistics'] as Map<String, dynamic>;
+      statsJson.forEach((category, values) {
+        if (values is Map<String, dynamic>) {
+          final categoryStats = statistics[category] ?? {};
+          values.forEach((key, value) {
+            if (value is String) {
+              categoryStats[key] = BigInt.parse(value);
+            }
+          });
+          statistics[category] = categoryStats;
+        }
+      });
     }
   }
 
   Future<void> loadGame() async {
     try {
-      // Implement actual load logic
-      final json = {}; // Load from storage
-      if (json.isEmpty) {
-        throw Exception('Aucune donnée de sauvegarde trouvée');
-      }
-
-      // Vérifier que toutes les sections requises existent
-      if (!json.containsKey('resources') ||
-          !json.containsKey('buildings') ||
-          !json.containsKey('statistics') ||
-          !json.containsKey('achievements')) {
-        throw Exception('Les données de sauvegarde sont incomplètes');
-      }
-
-      // Load resources
-      final resourcesJson = json['resources'] as Map<String, dynamic>;
-      resourcesJson.forEach((key, value) {
-        final resource = resourceManager.resources[key];
-        if (resource != null) {
-          resource.amount = BigInt.parse(value['amount'] as String);
-          resource.isUnlocked = value['isUnlocked'] as bool;
-        } else {
-          throw Exception(
-            'Ressource inconnue dans les données de sauvegarde: $key',
-          );
-        }
-      });
-
-      // Load buildings
-      final buildingsJson = json['buildings'] as Map<String, dynamic>;
-      buildingsJson.forEach((key, value) {
-        final building = buildingManager.buildings[key];
-        if (building != null) {
-          building.amount = BigInt.parse(value['amount'] as String);
-          building.currentDurability = BigInt.parse(
-            value['currentDurability'] as String,
-          );
-        } else {
-          throw Exception(
-            'Bâtiment inconnu dans les données de sauvegarde: $key',
-          );
-        }
-      });
-
-      // Load statistics
-      final stats = json['statistics'] as Map<String, dynamic>;
-      stats.forEach((category, values) {
-        if (!statistics.containsKey(category)) {
-          throw Exception('Catégorie de statistique inconnue: $category');
-        }
-        statistics[category] = (values as Map<String, dynamic>).map(
-          (key, value) => MapEntry(key, BigInt.parse(value as String)),
+      debugPrint("Chargement de la sauvegarde...");
+      final saveData = await SaveManager.loadGame();
+      if (saveData != null) {
+        debugPrint(
+          "Données de sauvegarde trouvées, application aux managers...",
         );
-      });
-
-      // Load achievements
-      try {
-        achievementManager.fromJson(
-          json['achievements'] as Map<String, dynamic>,
-        );
-      } catch (e) {
-        throw Exception('Erreur lors du chargement des succès: $e');
+        resourceManager.fromJson(saveData['resources']);
+        buildingManager.fromJson(saveData['buildings']);
+        achievementManager.fromJson(saveData['achievements']);
+        marketManager.fromJson(saveData['market']);
+        eventManager.fromJson(saveData['events']);
+        _loadStatistics(saveData);
+        isGameWon = saveData['isGameWon'] ?? false;
+        debugPrint('Sauvegarde chargée avec succès');
+        notifyListeners();
+      } else {
+        debugPrint('Aucune donnée de sauvegarde trouvée');
       }
-
-      isGameWon = json['isGameWon'] as bool? ?? false;
-
-      notifyListeners();
     } catch (e) {
-      _handleError(e);
-      throw Exception('Erreur lors du chargement de la sauvegarde: $e');
+      debugPrint('Erreur lors du chargement de la sauvegarde: $e');
     }
   }
 
@@ -363,6 +312,8 @@ class GameState extends ChangeNotifier {
 
   static Future<GameState> loadGameState() async {
     try {
+      debugPrint("Initialisation du GameState...");
+      // Charger les données initiales depuis game_data.json
       final String jsonString = await rootBundle.loadString(
         'assets/data/game_data.json',
       );
@@ -376,6 +327,7 @@ class GameState extends ChangeNotifier {
         );
       }
 
+      // Créer les managers avec les données initiales
       final List<dynamic> resourcesData = jsonData['resources'];
       if (resourcesData.isEmpty) {
         throw Exception('Aucune ressource trouvée dans game_data.json');
@@ -396,22 +348,33 @@ class GameState extends ChangeNotifier {
           (building['id'] as String): Building.fromJson(building),
       };
 
+      // Initialiser les managers avec les données de base
+      final resourceManager = ResourceManager();
+      resourceManager.initializeResources(resources);
+
+      final buildingManager = BuildingManager();
+      buildingManager.initializeBuildings(buildings);
+
+      final achievementManager = AchievementManager();
+      await achievementManager.initialize();
+
+      // Créer le GameState avec les managers initialisés
       final gameState = GameState(
-        resourceManager: ResourceManager(resources: resources),
-        buildingManager: BuildingManager(),
-        achievementManager: AchievementManager(),
+        resourceManager: resourceManager,
+        buildingManager: buildingManager,
+        achievementManager: achievementManager,
         marketManager: MarketManager(
           resourceIds: resources.keys.toList(),
           volatility: 0.05,
         ),
         eventManager: EventManager(),
+        gameData: jsonData,
       );
 
-      await gameState.achievementManager.initialize();
-      gameState.buildingManager.initializeBuildings(buildings);
+      debugPrint('GameState initialisé avec les données de base');
       return gameState;
     } catch (e) {
-      debugPrint('Erreur lors du chargement des données du jeu: $e');
+      debugPrint('Erreur lors de l\'initialisation du GameState: $e');
       throw Exception('Erreur lors du chargement des données du jeu: $e');
     }
   }
@@ -422,7 +385,7 @@ class GameState extends ChangeNotifier {
     _tradingTimer?.cancel();
     _saveTimer?.cancel();
     _achievementCheckTimer?.cancel();
-    saveGame();
+    saveGame(force: true);
     super.dispose();
   }
 

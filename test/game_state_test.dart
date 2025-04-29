@@ -45,7 +45,9 @@ void main() {
         ),
       };
 
-      resourceManager = ResourceManager(resources: resources);
+      resourceManager = ResourceManager();
+      resourceManager.initializeResources(resources);
+
       buildingManager = BuildingManager();
 
       // Modification manuelle des bâtiments pour les tests
@@ -73,7 +75,9 @@ void main() {
 
       // Initialiser les groupes de bâtiments
       for (var building in buildingManager.buildings.values) {
-        buildingManager.buildingGroups[building.id] = BuildingGroup(config: building);
+        buildingManager.buildingGroups[building.id] = BuildingGroup(
+          config: building,
+        );
       }
 
       gameState = GameState(
@@ -82,14 +86,19 @@ void main() {
         achievementManager: AchievementManager(),
         marketManager: MarketManager(resourceIds: resources.keys.toList()),
         eventManager: EventManager(),
+        gameData: {
+          'resources': resources.values.map((r) => r.toJson()).toList(),
+          'buildings':
+              buildingManager.buildings.values.map((b) => b.toJson()).toList(),
+        },
       );
     });
 
     test('clickResource increments resource amount', () {
       final initialWood = gameState.resourceManager.resources['wood']!.amount;
-      
+
       gameState.clickResource('wood');
-      
+
       expect(
         gameState.resourceManager.resources['wood']!.amount,
         equals(initialWood + BigInt.one),
@@ -121,7 +130,7 @@ void main() {
         // Assurer d'avoir assez de wood et stone.
         gameState.resourceManager.resources['wood']!.amount = BigInt.from(200);
         gameState.resourceManager.resources['stone']!.amount = BigInt.from(10);
-        
+
         // Acheter une Stone Pile.
         gameState.buyBuilding('stonePile');
         expect(
@@ -129,20 +138,20 @@ void main() {
           isTrue,
         );
         final group = gameState.buildingManager.buildingGroups['stonePile']!;
-        
+
         // Vérifier que le building a bien été ajouté au groupe
         expect(group.count, equals(BigInt.one));
 
         final initialWood = gameState.resourceManager.resources['wood']!.amount;
-        
+
         // Appel de tick : Stone Pile produit 2 wood par tick.
         gameState.tick();
-        
+
         expect(
           gameState.resourceManager.resources['wood']!.amount,
           equals(initialWood + BigInt.from(2)),
         );
-        
+
         // La dégradation devrait réduire la durabilité
         expect(group.count, equals(BigInt.one));
       },

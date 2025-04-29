@@ -1,14 +1,31 @@
 // lib/managers/resource_manager.dart
 import 'package:test_1/interfaces/resource.interface.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 
-class ResourceManager {
-  final Map<String, Resource> resources;
+class ResourceManager extends ChangeNotifier {
+  final Map<String, Resource> resources = {};
 
-  ResourceManager({required this.resources}) {
-    // Initialiser chaque ressource à partir de son initialAmount.
-    for (var res in resources.values) {
-      res.amount = res.initialAmount;
+  ResourceManager() {
+    // Le constructeur ne crée plus de données par défaut
+    // Les données doivent être chargées via initializeResources
+  }
+
+  void addResource(String resourceId, BigInt amount) {
+    resources[resourceId]?.amount += amount;
+  }
+
+  void removeResource(String resourceId, BigInt amount) {
+    final currentAmount = resources[resourceId]?.amount ?? BigInt.zero;
+    if (currentAmount >= amount) {
+      resources[resourceId]?.amount -= amount;
     }
+  }
+
+  void initializeResources(Map<String, Resource> initialResources) {
+    resources.clear();
+    resources.addAll(initialResources);
+    notifyListeners();
   }
 
   void clickResource(String resourceId) {
@@ -33,8 +50,9 @@ class ResourceManager {
 
   void unlockResource(String resourceId) {
     final resource = resources[resourceId];
-    if (resource != null && !resource.isUnlocked) {
+    if (resource != null) {
       resource.isUnlocked = true;
+      notifyListeners();
     }
   }
 
@@ -70,19 +88,28 @@ class ResourceManager {
       resources.values
           .where((res) => !res.isUnlocked && res.unlockCost != null)
           .toList();
-          
-  Map<String, dynamic> toJson() => {
-    for (var entry in resources.entries)
-      entry.key: entry.value.toJson()
-  };
+
+  Map<String, dynamic> toJson() {
+    return resources.map(
+      (key, value) => MapEntry(key, {
+        'amount': value.amount.toString(),
+        'value': value.value.toString(),
+        'isUnlocked': value.isUnlocked,
+      }),
+    );
+  }
 
   void fromJson(Map<String, dynamic> json) {
     json.forEach((key, value) {
-      if (resources.containsKey(key)) {
-        final resource = Resource.fromJson(value);
-        resources[key]!.amount = resource.amount;
-        resources[key]!.isUnlocked = resource.isUnlocked;
+      if (value is Map<String, dynamic>) {
+        final resource = resources[key];
+        if (resource != null) {
+          resource.amount = BigInt.parse(value['amount'].toString());
+          resource.value = BigInt.parse(value['value'].toString());
+          resource.isUnlocked = value['isUnlocked'] ?? false;
+        }
       }
     });
+    notifyListeners();
   }
 }
