@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:test_1/component/achievement.component.dart';
+import 'package:test_1/component/achievement/achievement.component.dart';
 import 'package:test_1/managers/achievement.manager.dart';
 
 class AchievementsPage extends StatelessWidget {
