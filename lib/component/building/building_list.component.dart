@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:test_1/component/building.component.dart';
+import 'package:test_1/component/building/building.component.dart';
 import 'package:test_1/interfaces/building.enum.dart';
 import 'package:test_1/services/game_state.service.dart';
 
